@@ -1,0 +1,15 @@
+#__nuxt {
+  display: flex;
+  flex-direction: column-reverse;
+  min-height: 100vh;
+  min-width: 18.75rem;
+
+  @media (--viewport-md) {
+    flex-direction: row;
+  }
+
+  main {
+    flex: 1;
+    padding: var(--indent);
+  }
+}
