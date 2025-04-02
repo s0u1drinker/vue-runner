@@ -26,7 +26,6 @@ const size: string = "1.25rem";
       </li>
     </ul>
   </nav>
-  
 </template>
 
 <style lang="postcss" scoped>
@@ -76,7 +75,6 @@ const size: string = "1.25rem";
     }
 
     @media (--viewport-md) {
-      align-items: start;
       gap: var(--indent-half);
       flex-direction: row;
       padding: var(--list-item-padding);
