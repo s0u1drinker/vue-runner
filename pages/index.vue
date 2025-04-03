@@ -1,30 +1,15 @@
 <script setup lang="ts">
-import type {DocumentData, Firestore} from 'firebase/firestore'
-import { collection, getDocs, QuerySnapshot } from 'firebase/firestore'
-import { ref, onMounted } from 'vue'
+import { storeToRefs } from 'pinia';
+import { useWorkoutStore } from '@/stores/workoutStore';
 
-interface Workout {
-  id: string,
-  dateStart: string,
-  dateStop: string,
-  distance: number
-}
-
-const { db } = useFirebase()
-const workout = ref<Workout[]>([])
-
-const fetchWorkout = async (): Promise<void> => {
-  const querySnapshot: QuerySnapshot<DocumentData> = await getDocs(collection(db as Firestore, 'workout'))
-
-  workout.value = querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() } as Workout))
-}
-
-onMounted(fetchWorkout)
+const workoutStore = useWorkoutStore();
+const { workouts, isLoadingData } = storeToRefs(workoutStore);
 </script>
 
 <template>
   <h1>Статистика</h1>
-  {{ workout }}
+  <span v-if="isLoadingData">Загрузка данных...</span>
+  {{ workouts }}
 </template>
 
 <style scoped></style>
