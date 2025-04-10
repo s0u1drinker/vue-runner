@@ -8,12 +8,6 @@ const size: string = "1.25rem";
     <ul class="navigation__list">
       <li class="navigation__item">
         <NuxtLink class="navigation__link" to="/">
-          <Icon name="material-symbols:bar-chart-4-bars" :size />
-          <span>Статистика</span>
-        </NuxtLink>
-      </li>
-      <li class="navigation__item">
-        <NuxtLink class="navigation__link" to="/data">
           <Icon name="material-symbols:directions-run" :size />
           <span>Тренировки</span>
         </NuxtLink>
@@ -22,6 +16,12 @@ const size: string = "1.25rem";
         <NuxtLink class="navigation__link" to="/add">
           <Icon name="material-symbols:add-2" :size />
           <span>Добавить</span>
+        </NuxtLink>
+      </li>
+      <li class="navigation__item">
+        <NuxtLink class="navigation__link" to="/stat">
+          <Icon name="material-symbols:bar-chart-4-bars" :size />
+          <span>Статистика</span>
         </NuxtLink>
       </li>
     </ul>

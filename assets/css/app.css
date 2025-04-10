@@ -13,3 +13,28 @@
     padding: var(--indent);
   }
 }
+
+h1 + div {
+  margin-top: var(--indent-double);
+}
+
+.link {
+  color: var(--cobalt-blue);
+  text-decoration: underline;
+  transition: color var(--animation);
+
+  &:hover,
+  &:visited:hover {
+    color: var(--blue);
+  }
+
+  &:visited {
+    color: var(--cobalt-blue);
+  }
+}
+
+.block {
+  border: var(--border);
+  border-radius: var(--border-radius);
+  padding: var(--indent);
+}
