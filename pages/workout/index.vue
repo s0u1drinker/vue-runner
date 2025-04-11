@@ -1,32 +1,32 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 
-const timerTick: number = 1000
+const timerTick: number = 1
 // Время до редиректа.
-let timer: Ref<number> = ref(5000)
+let timer: Ref<number> = ref(7)
 
 const textEnding = computed(() => {
-  return (timer.value === 1000) ? 'у' : (timer.value === 5000) ? '' : 'ы'
+  return (timer.value === 1) ? 'у' : (timer.value >= 5) ? '' : 'ы'
 })
 const timerText = computed(() => {
-  return `${timer.value / 1000} секунд${textEnding.value}`
+  return `${timer.value} секунд${textEnding.value}`
 })
 
 onMounted(() => {
   const timerId = setInterval(async () => {
-    if (timer.value === 1000) {
+    if (timer.value <= 1) {
       clearInterval(timerId);
       await navigateTo('/')
     } else {
       timer.value -= timerTick
     }
-  }, timerTick)
+  }, timerTick * 1000)
 })
 </script>
 
 <template>
   <h1>Ошибка!</h1>
-  <p>Отсутствует идентификтаор тренировки. Вы будете перенаправлены на главную страницу через {{ timerText }}...</p>
+  <p>Неверный идентификтаор тренировки.<br />Вы будете перенаправлены на страницу с тренировками через {{ timerText }}...</p>
 </template>
 
 <style scoped></style>

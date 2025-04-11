@@ -45,6 +45,16 @@ export const useWorkoutStore = defineStore('workout', {
         }
       }
     },
+    /**
+     * Возвращает информацию о тренировке по идентификатору.
+     * @param idWorkout Идентификатор трениовки. 
+     * @returns Информация о тренировке или false.
+     */
+    getWorkoutByID: (state) => {
+      return (idWorkout: string): Workout | Boolean => {
+        return state.workouts.find((workout) => workout.id === idWorkout) || false
+      }
+    }
   },
   actions: {
     /**
@@ -73,19 +83,34 @@ export const useWorkoutStore = defineStore('workout', {
       const workoutsRef = useCollection(collection(useFirestore(), 'workout'));
       // Если получен пустой массив, то выбрасывается ошибка. Здесь всегда должны приходить данные.
       if (!workoutsRef.value.length) {
-        this.setErrorFlag('Получен пустой массив <workout>.')
+        this.setErrorFlag('Что-то пошло не так. Обновите, пожалуйста, страницу.')
+        console.error('Получен пустой массив <workout>.')
       } else {
         // Извлекаем данные, попутно добавляя идентификатор документа.
-      this.workouts = workoutsRef.value.map((doc) => ({ id: doc.id, ...doc })) as Workout[];
+        this.workouts = workoutsRef.value.map((doc) => ({ id: doc.id, ...doc })) as Workout[];
       }
     },
-    // Обновление списка активностей из БД.
-    updateActivitiesFromDB() {
+    /**
+     * Обновление списка активностей из БД.
+     * В случае, если будет получен пустой массив с данными,
+     * произойдёт рекурсивный вызов функции с флагом повторного запуска.
+     * Если и второй раз будет получен пустой массив, значит требуется вмешательство техножрецов.
+     * @param isRestart Флаг повторного запуска.
+     */
+    updateActivitiesFromDB(isRestart: boolean = false) {
       // Загружаем данные из Firestore.
       const activitiesRef = useCollection(collection(useFirestore(), 'activities'));
       // Если получен пустой массив, то выбрасывается ошибка. Здесь всегда должны приходить данные.
       if (!activitiesRef.value.length) {
-        this.setErrorFlag('Получен пустой массив <activities>.')
+        // Проверяем флаг повторного запуска.
+        if (isRestart) {
+          // Если установлен - выводим сообщение об ошибке.
+          this.setErrorFlag('Что-то пошло не так. Обновите, пожалуйста, страницу.')
+          console.error('Получен пустой массив <activities>.')
+        } else {
+          // Если нет - перезапускаем функцию с флагом.
+          this.updateActivitiesFromDB(true)
+        }
       } else {
         // Извлекаем данные, попутно добавляя идентификатор документа.
         this.activities = activitiesRef.value.map((doc) => ({ id: doc.id, ...doc })) as Activity[];

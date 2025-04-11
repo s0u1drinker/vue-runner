@@ -1,6 +1,5 @@
 <script setup>
 import { storeToRefs } from 'pinia'
-import { useWorkoutStore } from '@/stores/workoutStore'
 
 const workoutStore = useWorkoutStore()
 const { workouts } = storeToRefs(workoutStore)
