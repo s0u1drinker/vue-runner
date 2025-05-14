@@ -26,7 +26,7 @@ const { workouts } = storeToRefs(workoutStore)
       <tbody>
         <tr v-for="workout in workouts" :key="workout.id">
           <td>{{ prettyDate(workout.dateStart).date }}</td>
-          <td>{{ workoutStore.getActivityTitleByID(workout.idActivity) }}</td>
+          <td>{{ workoutStore.getActivityByID(workout.idActivity).title }}</td>
           <td>{{ `${workout.distance} км` }}</td>
           <td>{{ workout.trainingTime }}</td>
           <td>{{ workout.heartrate }}</td>

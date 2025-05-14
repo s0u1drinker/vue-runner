@@ -41,3 +41,107 @@ export function prettyDate(dateString: string): DateFormat {
     return errorResponse
   }
 }
+/**
+ * Возвращает дистанцию в красивом формате: добавляет в конце строки "км" и, при необходимости, дополняет нулями.
+ * @param distance Дистанция.
+ * @returns Дистанция вида: 12.00 км.
+ */
+export function prettyDistance(distance: number): string {
+  let distanceString: string = '0'
+  let distanceSplit: string[]
+
+  if (distance !== 0) {
+    if (Number.isInteger(distance)) {
+      distanceString = `${distance}.00`
+    } else {
+      distanceSplit = String(distance).split('.')
+      distanceSplit[1] = distanceSplit[1].padEnd(2, '0')
+      distanceString = distanceSplit.join('.')
+    }
+  }
+
+  return `${distanceString} км`
+}
+/**
+ * Возвращает дистанцию одного круга в метрах/километрах.
+ * @param lapDistance Длина круга.
+ * @returns Длина круга вида: 800 м или 1.5 км
+ */
+export function prettyLapDistance(lapDistance: number): string {
+  return (lapDistance >= 1000) ? `${lapDistance / 1000} км` : `${lapDistance} м`
+}
+/**
+ * Индикатор потери веса (разность + процент).
+ * @param weightBefore Вес до тренировки.
+ * @param weightAfter Вес после тренировки.
+ * @returns Абсолютное значение + процент.
+ */
+export function weightLoss(weightBefore: number, weightAfter: number): string {
+  const weightDifference = weightBefore - weightAfter
+  const weightLossPercent = getPercent(weightBefore, weightAfter)
+
+  return `${weightDifference} кг (${(100 - weightLossPercent).toFixed(1)}%)`
+}
+/**
+ * Переводит время в количесвто секунд.
+ * @param time Время.
+ * @returns Количество секунд.
+ */
+export function timeToSeconds(time: string): number {
+  let secondsToReturn = 0
+
+  if (typeof time === 'string') {
+    const splitTime = time.split(':')
+
+    if (splitTime.length > 3 || splitTime.length < 2) {
+      console.error(`Некорректное количество элементов после разделения ${time}.`)
+    } else {
+      const [ seconds, minutes, hours ] = splitTime.reverse()
+
+      if (!Number.isNaN(+seconds)) {
+        if (!Number.isNaN(+minutes)) {
+          secondsToReturn = Number(seconds) + Number(minutes) * 60
+
+          if (hours) {
+            if (!Number.isNaN(+hours)) {
+              secondsToReturn += Number(hours) * 60 * 60
+            } else {
+              console.error(`Некорректное значение часов (${hours}) в ${time}`)
+              secondsToReturn = 0
+            }
+          }
+        } else {
+          console.error(`Некорректное значение минут (${minutes}) в ${time}`)
+        }
+      } else {
+        console.error(`Некорректное значение секунд (${seconds}) в ${time}`)
+      }
+    }
+  } else {
+    console.error(`Передано неверное значение времени: '${time}'. Ожидалась строка.`)
+  }
+
+  return secondsToReturn
+}
+/**
+ * Считает процент с указанной точностью.
+ * @param currentValue Текущее значение.
+ * @param maxValue Максимальное значение.
+ * @param precision Точность вычисления.
+ * @returns Процент.
+ */
+export function getPercent(currentValue: number, maxValue: number, precision: number = 1): number {
+  let percent = 0
+
+  if (typeof currentValue === 'number' && typeof maxValue === 'number') {
+    percent = currentValue * 100 / maxValue
+
+    if (precision) {
+      percent = Number(percent.toFixed(precision))
+    }
+  } else {
+    console.error(`Неверный тип переданных данных: ${currentValue} и ${maxValue}. Ожидались числа.`)
+  }
+
+  return percent
+}

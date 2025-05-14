@@ -1,14 +1,24 @@
 :root {
   /* Цвета */
   --white: #fff;
-  --light-gray: #d3d3d3;
+  --black: #000;
+  /* Серый */
+  --light-gray: #80808033;
   --dark-gray: #a9a9a9;
   --gray: #808080;
+  /* Синий */
   --powder-blue: #B6D0E2;
   --sky-blue: #87CEEB;
   --blue: #0000FF;
   --cobalt-blue: #0047AB;
-  --black: #000;
+  /* Зелёный */
+  --light-green: #00800044;
+  --green: #008000;
+  --dark-green: #006400;
+  /* Красный */
+  --light-red: #FF000044;
+  --red: #FF0000;
+  --dark-red: #8B0000;
   /* Основные отступы */
   --indent: 1rem;
   --indent-double: calc(var(--indent) * 2);
@@ -16,7 +26,7 @@
   /* Отступы в элементах */
   --list-item-padding: var(--indent-half) var(--indent);
   /* Анимации */
-  --animation: .5s ease-out;
+  --animation: .25s ease-out;
   /* Внешний вид блоков */
   --border: 1px solid var(--dark-gray);
   --border-radius: .5rem;

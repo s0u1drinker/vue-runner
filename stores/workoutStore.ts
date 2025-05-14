@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
-import { useFirestore, useCollection } from 'vuefire'
-import { collection } from 'firebase/firestore'
+import { useFirestore, useCollection, useDocument } from 'vuefire'
+import { collection, doc, updateDoc } from 'firebase/firestore'
 import type { Workout } from '@/types/workout'
 import type { Activity } from '@/types/activity'
 import type { ErrorData } from '@/types/errorData'
@@ -23,36 +23,63 @@ export const useWorkoutStore = defineStore('workout', {
   }),
   getters: {
     /**
-     * Возвращает наименование активности по идентификатору.
-     * В случае ошибки возвращает пустую строку и выводит в консоль её описание.
+     * Возвращает Информацию об активности по идентификатору.
      * @param idActivity Идентификатор активности.
      * @returns Наименование активности или, в случае ошибки, пустая строка.
      */
-    getActivityTitleByID: (state) => {
-      return (idActivity :string): string => {
-        const activity: Activity | undefined = state.activities.find((activity) => activity.id === idActivity)
+    getActivityByID: (state) => {
+      return (idActivity: string): Activity => {
+        let activityData = state.activities.find((activity) => activity.id === idActivity)
 
-        if (activity) {
-          if ('title' in activity) {
-            return activity.title
+        if (typeof activityData !== 'undefined') {
+          // Проверяем наличие наименования активности.
+          if (activityData.hasOwnProperty('title')) {
+            if (!activityData.title) {
+              console.error(`Не указано наименование активности с идентификатором ${idActivity}`)
+            }
           } else {
-            console.error(`Отсутствует свойство <title> у типа активности с идентификатором '${idActivity}'.`)
-            return ''
+            activityData.title = ''
+            console.error(`Отсутствует свойство <title> у активности с идентификатором ${idActivity}`)
+          }
+          // Проверяем наличие информации об иконке.
+          if (activityData.hasOwnProperty('icon')) {
+            if (!activityData.icon) {
+              console.error(`Не указана иконка активности с идентификатором ${idActivity}`)
+            }
+          } else {
+            activityData.icon = ''
+            console.error(`Отсутствует свойство <icon> у активности с идентификатором ${idActivity}`)
           }
         } else {
-          console.error(`Не найден тип активности по идентификатору '${idActivity}'.`)
-          return ''
+          console.error(`Не найдена активность с идентификатором ${idActivity}`)
+          activityData = {
+            id: '',
+            title: '',
+            icon: '',
+          }
         }
+
+        return activityData
+      }
+    },
+    /**
+     * Проверяет наличие иконки в массиве активностей.
+     * @param iconName Наименование иконки.
+     * @returns False - такой иконки нет ни у одной из активностей / True - можно использовать.
+     */
+    isValidActivityIcon: (state) => {
+      return (iconName: string): Boolean => {
+        return state.activities.some((activity) => activity.icon === iconName)
       }
     },
     /**
      * Возвращает информацию о тренировке по идентификатору.
      * @param idWorkout Идентификатор трениовки. 
-     * @returns Информация о тренировке или false.
+     * @returns Информация о тренировке или undefined.
      */
     getWorkoutByID: (state) => {
-      return (idWorkout: string): Workout | Boolean => {
-        return state.workouts.find((workout) => workout.id === idWorkout) || false
+      return (idWorkout: string): Workout | undefined => {
+        return state.workouts.find((workout) => workout.id === idWorkout)
       }
     }
   },
@@ -80,7 +107,7 @@ export const useWorkoutStore = defineStore('workout', {
     // Обновление данных о тренировках из БД.
     updateWorkoutsFromDB() {
       // Загружаем данные из Firestore.
-      const workoutsRef = useCollection(collection(useFirestore(), 'workout'));
+      const workoutsRef = useCollection(collection(useFirestore(), 'workout'))
       // Если получен пустой массив, то выбрасывается ошибка. Здесь всегда должны приходить данные.
       if (!workoutsRef.value.length) {
         this.setErrorFlag('Что-то пошло не так. Обновите, пожалуйста, страницу.')
@@ -91,7 +118,7 @@ export const useWorkoutStore = defineStore('workout', {
       }
     },
     /**
-     * Обновление списка активностей из БД.
+     * Обновление списка активностей в хранилище из БД.
      * В случае, если будет получен пустой массив с данными,
      * произойдёт рекурсивный вызов функции с флагом повторного запуска.
      * Если и второй раз будет получен пустой массив, значит требуется вмешательство техножрецов.
@@ -99,7 +126,7 @@ export const useWorkoutStore = defineStore('workout', {
      */
     updateActivitiesFromDB(isRestart: boolean = false) {
       // Загружаем данные из Firestore.
-      const activitiesRef = useCollection(collection(useFirestore(), 'activities'));
+      const activitiesRef = useCollection(collection(useFirestore(), 'activities'))
       // Если получен пустой массив, то выбрасывается ошибка. Здесь всегда должны приходить данные.
       if (!activitiesRef.value.length) {
         // Проверяем флаг повторного запуска.
@@ -116,5 +143,33 @@ export const useWorkoutStore = defineStore('workout', {
         this.activities = activitiesRef.value.map((doc) => ({ id: doc.id, ...doc })) as Activity[];
       }
     },
+    /**
+     * Обновление в БД информации о тренировке.
+     * @param idWorkout Идентификатор тренировки.
+     * @param workout Данные о тренировке.
+     * @returns Результат обновления (true/false).
+     */
+    async updateWorkoutInDB(idWorkout: string, workout: Workout): Promise<boolean> {
+      let updateResult = false
+
+      try {
+        if (typeof idWorkout === 'string' && idWorkout.length > 0) {
+          if (workout && typeof workout === 'object' && Object.keys(workout).length !== 0) {
+            const docRef = doc(useFirestore(), 'workout', idWorkout)
+
+            await updateDoc(docRef, workout)
+            updateResult = true
+          } else {
+            console.error(`Отсутствуют данные о тренировке: ${workout}.`)
+          }
+        } else {
+          console.error(`Неверный тип идентификатора тренировки: ${idWorkout}. Ожидалась строка.`)
+        }
+      } catch (err) {
+        console.error(`Произошла ошибка при обновлении данных в БД: ${err}`)
+      }
+
+      return updateResult
+    }
   }
 })

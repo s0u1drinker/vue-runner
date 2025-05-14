@@ -14,5 +14,6 @@ export type Workout = {
   idActivity: string,
   heartrate: number,
   lapDistance: number,
-  weather: Weather
+  weather: Weather,
+  comment: string,
 }

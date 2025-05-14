@@ -63,6 +63,7 @@ const size: string = "1.25rem";
     display: flex;
     padding: var(--indent) 0;
     flex-direction: column;
+    transition: background-color var(--animation);
     -webkit-tap-highlight-color: transparent;
 
     &_active {

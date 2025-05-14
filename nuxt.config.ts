@@ -19,7 +19,13 @@ export default defineNuxtConfig({
   ],
   icon: {
     mode: 'svg',
-    size: '16px'
+    size: '16px',
+    customCollections: [
+      {
+        prefix: 'custom-icons',
+        dir: './assets/custom-icons'
+      },
+    ],
   },
   googleFonts: {
     families: {
