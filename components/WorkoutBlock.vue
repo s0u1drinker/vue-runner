@@ -1,11 +1,7 @@
 <script setup lang="ts">
-interface Props {
-  title: string,
-  indicator: string,
-  icon?: string,
-}
+import type { Indicator } from '@/types/indicator';
 
-const props = defineProps<Props>()
+const props = defineProps<Indicator>()
 </script>
 
 <template>
