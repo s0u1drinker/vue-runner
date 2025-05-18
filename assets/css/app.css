@@ -36,5 +36,9 @@ h1 + div {
 .block {
   border: var(--border);
   border-radius: var(--border-radius);
-  padding: var(--indent);
+  padding: var(--indent-three-quarters);
+
+  @media (--viewport-sm) {
+    padding: var(--indent);
+  }
 }

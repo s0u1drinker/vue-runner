@@ -10,6 +10,8 @@ const idWorkout = route.params.id as string
 const workout = workoutStore.getWorkoutByID(idWorkout) as Workout
 // Данные об активности, указанной в тренировке.
 const activity = workoutStore.getActivityByID(workout.idActivity)
+// Данные о погоде, указанной в тренировке
+const weather = workoutStore.getWeatherInfoByID(workout.idWeather)
 // Список индикаторов.
 const workoutIndicators: Array<Indicator> = [
   {
@@ -20,10 +22,14 @@ const workoutIndicators: Array<Indicator> = [
   { title: 'Общее время', indicator: workout.trainingTime },
   { title: 'Темп', indicator: workout.averagePace },
   { title: 'Пульс', indicator: String(workout.heartrate) },
-  { title: 'Каденс', indicator: String(workout.cadence) },
-  { title: workout.weather.description, indicator: prettyTemperature(workout.weather.temperature) },
+  {
+    icon: weather.icon || '',
+    title: weather.description,
+    indicator: prettyTemperature(workout.temperature)
+  },
   { title: 'Вес до', indicator: `${workout.weightBefore} кг` },
   { title: 'Потеря веса', indicator: weightLoss(workout.weightBefore, workout.weightAfter) },
+  { title: 'Каденс', indicator: String(workout.cadence) },
   { title: 'Круг', indicator: prettyLapDistance(workout.lapDistance) }
 ]
 
@@ -41,13 +47,29 @@ definePageMeta({
       </div>
       <div class="workout__charts">
         <TableLaps :laps="workout.laps" :lapDistance="workout.lapDistance" />
-      </div>
-      <div class="workout__stat">
-        Какие-то графики...
+        <div class="workout__stat">
+          Какие-то графики...
+        </div>
       </div>
     </div>
   </template>
   <TemplateError errorCode="VV01" v-else />
 </template>
 
-<style scoped></style>
+<style scoped>
+.workout {
+
+  &__indicators {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--indent);
+  }
+
+  &__charts {
+    display: flex;
+    gap: var(--indent-double);
+    flex-direction: column;
+    margin-top: var(--indent-double);
+  }
+}
+</style>

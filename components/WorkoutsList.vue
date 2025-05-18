@@ -31,7 +31,7 @@ const { workouts } = storeToRefs(workoutStore)
           <td>{{ workout.trainingTime }}</td>
           <td>{{ workout.heartrate }}</td>
           <td>{{ workout.averagePace }}</td>
-          <td>{{ prettyTemperature(workout.weather.temperature) }}</td>
+          <td>{{ prettyTemperature(workout.temperature) }}</td>
           <td>
             <NuxtLink class="link" :to="`/workout/${workout.id}`">Посмотреть</NuxtLink>
           </td>

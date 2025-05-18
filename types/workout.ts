@@ -1,5 +1,4 @@
 import type { Lap } from "./lap"
-import type { Weather } from "./weather"
 
 export type Workout = {
   id: string,
@@ -14,6 +13,7 @@ export type Workout = {
   idActivity: string,
   heartrate: number,
   lapDistance: number,
-  weather: Weather,
+  idWeather: string,
+  temperature: number,
   comment: string,
 }

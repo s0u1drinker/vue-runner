@@ -21,8 +21,10 @@
   --dark-red: #8B0000;
   /* Основные отступы */
   --indent: 1rem;
-  --indent-double: calc(var(--indent) * 2);
-  --indent-half: calc(var(--indent) / 2);
+  --indent-double: calc(var(--indent) * 2);/* 2x */
+  --indent-half: calc(var(--indent) / 2);/* x/2 */
+  --indent-quarter: calc(var(--indent) / 4);/* x/4 */
+  --indent-three-quarters: calc(var(--indent-half) + var(--indent-quarter));/* 0.75x */
   /* Отступы в элементах */
   --list-item-padding: var(--indent-half) var(--indent);
   /* Анимации */

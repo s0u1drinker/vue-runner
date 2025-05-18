@@ -4,11 +4,13 @@ import { collection, doc, updateDoc } from 'firebase/firestore'
 import type { Workout } from '@/types/workout'
 import type { Activity } from '@/types/activity'
 import type { ErrorData } from '@/types/errorData'
+import type { Weather } from '@/types/weather'
 
 export const useWorkoutStore = defineStore('workout', {
   state: () => ({
     workouts: [] as Workout[],
     activities: [] as Activity[],
+    weather: [] as Weather[],
     /**
      * Флаг загрузки данных.
      */
@@ -60,6 +62,30 @@ export const useWorkoutStore = defineStore('workout', {
         }
 
         return activityData
+      }
+    },
+    /**
+     * Информация о погоде по идентификатору.
+     * @param idWeather Идентификатор объекта с описанием погоды.
+     * @returns Данные о погоде.
+     */
+    getWeatherInfoByID: (state) => {
+      return (idWeather: string): Weather => {
+        let returnData = {
+          idWeather: '',
+          description: '',
+          icon: '',
+        }
+
+        if (idWeather && typeof idWeather === 'string') {
+          const findResult = state.weather.find((item) => item.idWeather === idWeather)
+
+          if (typeof findResult !== 'undefined') {
+            returnData = { ...findResult }
+          } else console.error(`Не найдена информация о погоде с идентификатором: ${idWeather}`)
+        } else console.error(`Неверный идентификатор: ${idWeather}. Ожидалась строка.`)
+
+        return returnData
       }
     },
     /**
@@ -141,6 +167,19 @@ export const useWorkoutStore = defineStore('workout', {
       } else {
         // Извлекаем данные, попутно добавляя идентификатор документа.
         this.activities = activitiesRef.value.map((doc) => ({ id: doc.id, ...doc })) as Activity[];
+      }
+    },
+    // Обновление данных о погоде из БД.
+    updateWeatherFromDB() {
+      // Загружаем данные из Firestore.
+      const weatherRef = useCollection(collection(useFirestore(), 'weatherDescriptions'))
+      // Если получен пустой массив, то выбрасывается ошибка. Здесь всегда должны приходить данные.
+      if (!weatherRef.value.length) {
+        this.setErrorFlag('Что-то пошло не так. Обновите, пожалуйста, страницу.')
+        console.error('Получен пустой массив <weather>.')
+      } else {
+        // Извлекаем данные, попутно добавляя идентификатор документа.
+        this.weather = weatherRef.value.map((doc) => ({ idWeather: doc.id, ...doc })) as Weather[];
       }
     },
     /**

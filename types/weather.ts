@@ -1,4 +1,5 @@
 export type Weather = {
-  temperature: number,
-  description: string
+  idWeather: string,
+  description: string,
+  icon: string,
 }

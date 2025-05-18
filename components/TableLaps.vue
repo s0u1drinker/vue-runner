@@ -57,9 +57,9 @@ function checkClass(pace: string): string | null {
       <thead class="t-laps__thead">
         <tr>
           <th>Круг</th>
-          <th>Время круга</th>
+          <th class="t-laps__extra-column">Время круга</th>
           <th>Темп</th>
-          <th></th>
+          <th class="t-laps__extra-column"></th>
           <th>Пульс</th>
           <th>Общее время</th>
         </tr>
@@ -69,9 +69,9 @@ function checkClass(pace: string): string | null {
           <td :class="checkClass(lap.pace)">
             {{ `${lap.distance < props.lapDistance ? '<' : ''}${lap.idLap}` }}
           </td>
-          <td>{{ lap.lapTime }}</td>
+          <td class="t-laps__extra-column">{{ lap.lapTime }}</td>
           <td :class="checkClass(lap.pace)">{{ lap.pace }}</td>
-          <td>
+          <td class="t-laps__extra-column">
             <div class="t-laps__lap-ground">
               <div class="t-laps__lap-bar" :style="{ width: `${getPercent(timeToSeconds(lap.pace), computedLaps.lapBar)}%` }"></div>
             </div>
@@ -85,6 +85,8 @@ function checkClass(pace: string): string | null {
 </template>
 
 <style scoped>
+@import '@/assets/css/media.postcss';
+
 .t-laps {
 
   &__tbody {
@@ -122,6 +124,14 @@ function checkClass(pace: string): string | null {
       height: inherit;
       transition: width var(--animation);
       width: 0;
+    }
+  }
+
+  &__extra-column {
+    display: none;
+
+    @media (--viewport-sm) {
+      display: table-cell;
     }
   }
 }
