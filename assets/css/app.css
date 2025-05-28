@@ -42,3 +42,33 @@ h1 + div {
     padding: var(--indent);
   }
 }
+
+.color {
+  &_red {
+    color: var(--red);
+  }
+
+  &_green {
+    color: var(--green);
+  }
+
+  &_blue {
+    color: var(--blue);
+  }
+}
+
+.group {
+  display: flex;
+  gap: var(--indent);
+  align-items: flex-start;
+  flex-direction: column;
+
+  @media (--viewport-sm) {
+    flex-direction: row;
+  }
+
+  &__label {
+    display: flex;
+    gap: var(--indent-half);
+  }
+}
