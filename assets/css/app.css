@@ -72,3 +72,11 @@ h1 + div {
     gap: var(--indent-half);
   }
 }
+
+.extra-column {
+  display: none;
+
+  @media (--viewport-sm) {
+    display: table-cell;
+  }
+}
