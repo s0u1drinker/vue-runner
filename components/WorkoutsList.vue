@@ -58,6 +58,10 @@ const { workouts } = storeToRefs(workoutStore)
     th, td {
       padding: var(--indent-quarter) var(--indent-half);
       text-align: center;
+
+      @media (--viewport-md) {
+        padding: var(--indent-half) var(--indent);
+      }
     }
 
     &-thead {

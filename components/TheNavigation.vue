@@ -34,11 +34,16 @@ const size: string = "1.25rem";
 .navigation {
   border-top: var(--border);
   color: var(--dark-gray);
+  position: sticky;
+  bottom: 0;
+  background-color: var(--white);
 
   @media (--viewport-md) {
     border: 0;
     color: var(--black);
     padding: var(--indent);
+    top: 0;
+    height: fit-content;
   }
 
   &__list {
