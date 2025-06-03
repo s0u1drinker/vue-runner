@@ -1,7 +1,45 @@
 /* Buttons */
 .button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .25rem;
+  padding: .5rem .75rem;
+  border: 1px solid;
+  border-radius: .25rem;
+  background-color: var(--white);
+    transition:
+    color var(--animation),
+    background-color var(--animation),
+    border-color var(--animation);
+
+  &:hover {
+    background-color: var(--light-gray);
+  }
+
+  &:focus {
+    outline: var(--button-focus);
+  }
 
   &_blue {
-    background-color: var(--blue);
+    background-color: var(--button-blue);
+    border-color: var(--button-blue);
+    color: var(--white);
+
+    &:hover {
+      background-color: var(--button-blue-hover);
+      border-color: var(--button-blue-hover);
+    }
+  }
+
+  &_red {
+    background-color: var(--button-red);
+    border-color: var(--button-red);
+    color: var(--white);
+
+    &:hover {
+      background-color: var(--button-red-hover);
+      border-color: var(--button-red-hover);
+    }
   }
 }

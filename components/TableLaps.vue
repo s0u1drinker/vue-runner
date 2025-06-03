@@ -155,6 +155,7 @@ function checkClass(pace: string): string | null {
       flex-direction: column;
       gap: var(--indent-half);
       align-items: center;
+      margin-top: var(--indent);
     }
   }
 }

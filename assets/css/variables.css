@@ -35,4 +35,11 @@
   --border-radius: .5rem;
   /* Тени */
   --shadow: 0 0 .5rem rgba(0, 0, 0, .5);
+  /* Кнопки */
+  --button-blue: #4299e1;
+  --button-blue-hover: #2b6cb0;
+  --button-red: #cc4b37;
+  --button-red-hover: #a53a2a;
+  /* Фокус на элементах */
+  --button-focus: 2px solid var(--black);
 }
