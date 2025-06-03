@@ -8,6 +8,21 @@ const props = defineProps<{
 }>()
 
 /**
+ * Заголовки столбцов для таблицы.
+ */
+const theadList: Array<{
+  title: string,
+  extraColumn: boolean
+}> = [
+  { title: 'Круг', extraColumn: false, },
+  { title: 'Время круга', extraColumn: true, },
+  { title: 'Темп', extraColumn: false, },
+  { title: '', extraColumn: true, },
+  { title: 'Пульс', extraColumn: false, },
+  { title: 'Общее время', extraColumn: false, },
+]
+
+/**
  * Вычисление медленного и быстрого кругов.
  */
 const computedLaps = computed(() => {
@@ -56,28 +71,37 @@ function checkClass(pace: string): string | null {
     <table class="t-laps__table">
       <thead class="t-laps__thead">
         <tr>
-          <th>Круг</th>
-          <th class="extra-column">Время круга</th>
-          <th>Темп</th>
-          <th class="extra-column"></th>
-          <th>Пульс</th>
-          <th>Общее время</th>
+          <th
+            v-for="(th, index) in theadList"
+            :class="{ 'extra-column': th.extraColumn }"
+            :key="`${th.title}-${index}`"
+          >{{ th.title }}</th>
         </tr>
       </thead>
-      <tbody class="t-laps__tbody">
-        <tr v-for="(lap, index) in props.laps" :key="index">
-          <td :class="checkClass(lap.pace)">
-            {{ `${lap.distance < props.lapDistance ? '<' : ''}${lap.idLap}` }}
-          </td>
-          <td class="extra-column">{{ lap.lapTime }}</td>
-          <td :class="checkClass(lap.pace)">{{ lap.pace }}</td>
-          <td class="extra-column">
-            <div class="t-laps__lap-ground">
-              <div class="t-laps__lap-bar" :style="{ width: `${getPercent(timeToSeconds(lap.pace), computedLaps.lapBar)}%` }"></div>
+      <tbody>
+        <template v-if="props.laps.length > 0">
+          <tr class="t-laps__tr" v-for="(lap, index) in props.laps" :key="index">
+            <td :class="checkClass(lap.pace)">
+              {{ `${lap.distance < props.lapDistance ? '<' : ''}${lap.idLap}` }}
+            </td>
+            <td class="extra-column">{{ lap.lapTime }}</td>
+            <td :class="checkClass(lap.pace)">{{ lap.pace }}</td>
+            <td class="extra-column">
+              <div class="t-laps__lap-ground">
+                <div class="t-laps__lap-bar" :style="{ width: `${getPercent(timeToSeconds(lap.pace), computedLaps.lapBar)}%` }"></div>
+              </div>
+            </td>
+            <td>{{ lap.heartRate }}</td>
+            <td>{{ lap.totalTime }}</td>
+          </tr>
+        </template>
+        <tr class="t-laps__tr_no-data" v-else>
+          <td :colspan="theadList.length">
+            <div class="t-laps__box_no-data">
+              <p>Нет данных.</p>
+              <button class="button button_blue">Добавить</button>
             </div>
           </td>
-          <td>{{ lap.heartRate }}</td>
-          <td>{{ lap.totalTime }}</td>
         </tr>
       </tbody>
     </table>
@@ -89,15 +113,12 @@ function checkClass(pace: string): string | null {
 
 .t-laps {
 
-  &__tbody {
+  &__tr {
+    transition: background-color var(--animation);
 
-    & > tr {
-      transition: background-color var(--animation);
-
-      &:hover {
-        background-color: var(--light-gray);
-        cursor: default;
-      }
+    &:hover {
+      background-color: var(--light-gray);
+      cursor: default;
     }
   }
 
@@ -124,6 +145,16 @@ function checkClass(pace: string): string | null {
       height: inherit;
       transition: width var(--animation);
       width: 0;
+    }
+  }
+
+  &__box {
+
+    &_no-data {
+      display: flex;
+      flex-direction: column;
+      gap: var(--indent-half);
+      align-items: center;
     }
   }
 }

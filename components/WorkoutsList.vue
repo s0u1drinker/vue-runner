@@ -17,8 +17,8 @@ const { workouts } = storeToRefs(workoutStore)
           <th>Дата</th>
           <th>Дистанция</th>
           <th>Время</th>
+          <th class="extra-column">Темп</th>
           <th class="extra-column">Пульс</th>
-          <th class="extra-column">Время круга</th>
           <th class="extra-column">Температура</th>
         </tr>
       </thead>
@@ -31,8 +31,8 @@ const { workouts } = storeToRefs(workoutStore)
           <td>{{ prettyDate(workout.dateStart).date }}</td>
           <td>{{ `${workout.distance} км` }}</td>
           <td>{{ workout.trainingTime }}</td>
+          <td class="extra-column">{{ workout.averagePace || '-' }}</td>
           <td class="extra-column">{{ workout.heartrate }}</td>
-          <td class="extra-column">{{ workout.averagePace }}</td>
           <td class="extra-column">{{ prettyTemperature(workout.temperature) }}</td>
         </tr>
       </tbody>

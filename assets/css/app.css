@@ -1,3 +1,4 @@
+/* Root */
 #__nuxt {
   display: flex;
   flex-direction: column-reverse;
@@ -13,11 +14,20 @@
     padding: var(--indent);
   }
 }
-
+/* Tags */
 h1 + div {
   margin-top: var(--indent-double);
 }
 
+td, th {
+  padding: var(--indent-quarter) var(--indent-half);
+  text-align: center;
+
+  @media (--viewport-sm) {
+    padding: var(--indent-quarter) var(--indent-half);
+  }
+}
+/* Classes */
 .link {
   color: var(--cobalt-blue);
   text-decoration: underline;

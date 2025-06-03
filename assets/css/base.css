@@ -44,13 +44,4 @@ ul {
 
 table {
   border-collapse: collapse;
-
-  td, th {
-    padding: var(--indent-quarter) var(--indent-half);
-    text-align: center;
-
-    @media (--viewport-sm) {
-      padding: var(--indent-quarter) var(--indent-half);
-    }
-  }
 }

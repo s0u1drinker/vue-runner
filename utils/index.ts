@@ -77,7 +77,7 @@ export function prettyLapDistance(lapDistance: number): string {
  * @returns Абсолютное значение + процент.
  */
 export function weightLoss(weightBefore: number, weightAfter: number): string {
-  const weightDifference = weightBefore - weightAfter
+  const weightDifference = (weightBefore - weightAfter).toFixed(1)
   const weightLossPercent = getPercent(weightBefore, weightAfter)
 
   return `${weightDifference} кг (${(100 - weightLossPercent).toFixed(1)}%)`

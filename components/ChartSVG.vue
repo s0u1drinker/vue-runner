@@ -78,7 +78,7 @@ const coordinates = computed(() => {
         <text text-anchor="middle" font-size="12" :x="point.x" :y="point.y - 8">{{ points[index].titleY }}</text>
         <text text-anchor="middle" font-size="11" :x="point.x" :y="props.startY + 14">{{ points[index].titleX }}</text>
       </g>
-      <rect class="chart__point-area" :x="point.x - 5" :y="point.y - 5" width="10" :height="props.startY - point.y + 5" fill="transparent" />
+      <rect class="chart__point-area" :x="point.x - 10" :y="point.y - 10" width="20" :height="props.startY - point.y + 10" fill="transparent" />
     </g>
 
     <linearGradient :id="idGradient" x1="0%" y1="0%" x2="0%" y2="100%">

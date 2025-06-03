@@ -35,12 +35,23 @@ const chartsCount = computed<number>(() => {
  */
 const availableData = computed(() => {
   if (props.graphs.length > 0) {
-    return {
-      titles: props.graphs.slice(0, chartsCount.value).map((item) => item.title),
-      points: props.graphs.slice(0, chartsCount.value).map((item) => item.points),
+    /**
+     * Сумма длин массивов Points для каждого графика.
+     * Если 0 - не переданы точки для отрисовки графиков.
+     */
+    const lengthSum = props.graphs.reduce((currentSum, item) => currentSum + item.points.length, 0)
+
+    if (lengthSum) {
+      return {
+        titles: props.graphs.slice(0, chartsCount.value).map((item) => item.title),
+        points: props.graphs.slice(0, chartsCount.value).map((item) => item.points),
+      }
+    } else {
+      console.error('Не переданы данные для отрисовки графиков (пустой(ые) массив(ы) <points>).')
+      return false
     }
   } else {
-    console.error('Не переданы данные для отрисовки графиков (пустой массив <graphs>).')
+    console.error('Передан пустой массив <graphs>.')
     return false
   }
 })
@@ -59,16 +70,16 @@ const availableData = computed(() => {
       :colors="chartColors"
       :showCharts="checkedCharts"
       />
-      <div class="graph__error" v-else>Выберите график для отображения.</div>
+      <div class="graph__message" v-else>Выберите график для отображения.</div>
     </template>
-    <div class="graph__error" v-else>Нет данных для отображения.</div>
+    <div class="graph__message" v-else>Нет данных для отображения.</div>
   </div>
 </template>
 
 <style scoped>
 .graph {
 
-  &__error {
+  &__message {
     padding: var(--indent-double) 0;
   }
 }

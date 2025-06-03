@@ -10,7 +10,7 @@ const props = defineProps<Indicator>()
       <Icon v-if="props.icon" class="w-block__icon" :name="props.icon" size="1.25rem" />
       {{ props.title }}
     </div>
-    <div class="w-block__indicator">{{ props.indicator }}</div>
+    <div class="w-block__indicator">{{ props.indicator || '-' }}</div>
   </div>
 </template>
 
