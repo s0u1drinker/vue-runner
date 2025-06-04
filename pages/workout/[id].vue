@@ -31,6 +31,7 @@ const workoutIndicators: Array<Indicator> = [
   { title: 'Вес до', indicator: `${workout.weightBefore} кг` },
   { title: 'Потеря веса', indicator: weightLoss(workout.weightBefore, workout.weightAfter) },
   { title: 'Каденс', indicator: String(workout.cadence) },
+  { title: 'Набор высоты', indicator: workout.climb ? `${workout.climb} м` : '' },
   { title: 'Круг', indicator: prettyLapDistance(workout.lapDistance) }
 ]
 
@@ -69,6 +70,7 @@ definePageMeta({
   <template v-if="workout">
     <h1>{{ `Тренировка ${prettyDate(workout.dateStart).date} в ${prettyDate(workout.dateStart).time}` }}</h1>
     <div class="workout">
+      <div class="workout__comment">{{ workout.comment }}</div>
       <div class="workout__indicators">
         <WorkoutBlocksWrapper :indicators="workoutIndicators" />
       </div>
@@ -87,6 +89,10 @@ definePageMeta({
   display: flex;
   gap: var(--indent-double);
   flex-direction: column;
+
+  &__comment {
+    font-style: italic;
+  }
 
   &__indicators {
     display: flex;
