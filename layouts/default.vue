@@ -2,9 +2,14 @@
 
 <template>
   <TheNavigation />
-  <main>
+  <main class="default-layout">
     <slot></slot>
   </main>
 </template>
 
-<style scoped></style>
+<style scoped>
+.default-layout {
+  flex: 1;
+  padding: var(--indent);
+}
+</style>

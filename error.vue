@@ -4,7 +4,7 @@ const error = useError();
 
 <template>
   <NuxtLayout>
-    <h1>Уп-с, ошибка {{ error?.statusCode }}...</h1>
+    <h1>Упс, ошибка {{ error?.statusCode }}...</h1>
   </NuxtLayout>
 </template>
 

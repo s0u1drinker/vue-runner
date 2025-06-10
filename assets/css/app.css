@@ -8,11 +8,6 @@
   @media (--viewport-md) {
     flex-direction: row;
   }
-
-  main {
-    flex: 1;
-    padding: var(--indent);
-  }
 }
 /* Tags */
 h1 + div {

@@ -3,7 +3,8 @@
   --white: #fff;
   --black: #000;
   /* Серый */
-  --light-gray: #80808033;
+  --gray-alpha: #80808033;
+  --light-gray: #d3d3d3;
   --dark-gray: #a9a9a9;
   --gray: #808080;
   /* Синий */
@@ -41,5 +42,5 @@
   --button-red: #cc4b37;
   --button-red-hover: #a53a2a;
   /* Фокус на элементах */
-  --button-focus: 2px solid var(--black);
+  --focus: 2px solid var(--black);
 }
