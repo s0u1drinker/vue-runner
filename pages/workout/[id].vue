@@ -89,6 +89,7 @@ definePageMeta({
   display: flex;
   gap: var(--indent-double);
   flex-direction: column;
+  margin-top: var(--indent);
 
   &__comment {
     font-style: italic;

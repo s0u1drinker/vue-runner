@@ -10,10 +10,6 @@
   }
 }
 /* Tags */
-h1 + div {
-  margin-top: var(--indent-double);
-}
-
 td, th {
   padding: var(--indent-quarter) var(--indent-half);
   text-align: center;

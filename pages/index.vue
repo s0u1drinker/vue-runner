@@ -12,7 +12,10 @@ const { isLoadingData, error } = storeToRefs(workoutStore)
   <h1>Тренировки</h1>
   <span v-if="isLoadingData">Загрузка данных...</span>
   <span v-else-if="error.flag">{{ error.text }}</span>
-  <WorkoutsList v-else />
+  <template v-else>
+    <CurrentStatistic />
+    <WorkoutsList />
+  </template>
 </template>
 
 <style scoped></style>

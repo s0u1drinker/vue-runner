@@ -7,8 +7,12 @@ const { workouts } = storeToRefs(workoutStore)
 
 <template>
   <div class="workouts">
+    <h2>Список тренировок</h2>
     <div class="block">
       Какие-нибудь фильтры...
+    </div>
+    <div class="workouts__info">
+      <span class="workouts__info-item">Количество тренировок: {{ workouts.length }}</span>
     </div>
     <table class="workouts__table">
       <thead class="workouts__table-thead">
@@ -46,7 +50,12 @@ const { workouts } = storeToRefs(workoutStore)
 .workouts {
   display: flex;
   flex-direction: column;
-  gap: var(--indent-double);
+  gap: var(--indent);
+  margin-top: var(--indent-double);
+
+  &__info {
+    margin-top: var(--indent-double);
+  }
 
   &__table {
     font-size: 0.825rem;
