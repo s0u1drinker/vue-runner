@@ -5,12 +5,20 @@ import type { Workout } from '@/types/workout'
 import type { Activity } from '@/types/activity'
 import type { ErrorData } from '@/types/errorData'
 import type { Weather } from '@/types/weather'
+import type { WeekData } from '@/types/weekData'
+import type { MonthData } from '@/types/monthData'
+import type { YearData } from '@/types/yearData'
 
 export const useWorkoutStore = defineStore('workout', {
   state: () => ({
     workouts: [] as Workout[],
     activities: [] as Activity[],
     weather: [] as Weather[],
+    statistic: {
+      weeks: [] as WeekData[],
+      months: [] as MonthData[],
+      years: [] as YearData[],
+    },
     /**
      * Флаг загрузки данных.
      */
@@ -70,22 +78,16 @@ export const useWorkoutStore = defineStore('workout', {
      * @returns Данные о погоде.
      */
     getWeatherInfoByID: (state) => {
-      return (idWeather: string): Weather => {
-        let returnData = {
-          idWeather: '',
-          description: '',
-          icon: '',
-        }
-
+      return (idWeather: string): Weather | undefined => {
         if (idWeather && typeof idWeather === 'string') {
-          const findResult = state.weather.find((item) => item.idWeather === idWeather)
+          const findResult = state.weather.find((item) => item.id === idWeather)
 
           if (typeof findResult !== 'undefined') {
-            returnData = { ...findResult }
+            return findResult
           } else console.error(`Не найдена информация о погоде с идентификатором: ${idWeather}`)
         } else console.error(`Неверный идентификатор: ${idWeather}. Ожидалась строка.`)
 
-        return returnData
+        return undefined
       }
     },
     /**
@@ -107,7 +109,39 @@ export const useWorkoutStore = defineStore('workout', {
       return (idWorkout: string): Workout | undefined => {
         return state.workouts.find((workout) => workout.id === idWorkout)
       }
-    }
+    },
+    /**
+     * Данные о тренировках за указанную неделю.
+     * @param weekNumber Номер недели.
+     * @param year Год.
+     * @returns Статистика за указанную неделю или undefined.
+     */
+    getWeekStatisticByWeekNumber: (state) => {
+      return (year: number, weekNumber: number): WeekData | undefined => {
+        return state.statistic.weeks.find((weekData) => (weekData.year === year && weekData.weekNumber === weekNumber))
+      }
+    },
+    /**
+     * Данные о тренировках за указанный месяц.
+     * @param month Месяц.
+     * @param year Год.
+     * @returns Статистика за указанный месяц или undefined.
+     */
+    getMonthStatisticByMonth: (state) => {
+      return (year: number, month: number): MonthData | undefined => {
+        return state.statistic.months.find((monthData) => (monthData.year === year && monthData.month === month))
+      }
+    },
+    /**
+     * Данные о тренировках за указанный год.
+     * @param year Год.
+     * @returns Статистика за указанный год или undefined.
+     */
+    getYearStatistic: (state) => {
+      return (year: number): YearData | undefined => {
+        return state.statistic.years.find((yearData) => yearData.year === year)
+      }
+    },
   },
   actions: {
     /**
@@ -130,56 +164,37 @@ export const useWorkoutStore = defineStore('workout', {
         this.error.text = ''
       }
     },
-    // Обновление данных о тренировках из БД.
-    updateWorkoutsFromDB() {
-      // Загружаем данные из Firestore.
-      const workoutsRef = useCollection(collection(useFirestore(), 'workout'))
-      // Если получен пустой массив, то выбрасывается ошибка. Здесь всегда должны приходить данные.
-      if (!workoutsRef.value.length) {
-        this.setErrorFlag('Что-то пошло не так. Обновите, пожалуйста, страницу.')
-        console.error('Получен пустой массив <workout>.')
-      } else {
-        // Извлекаем данные, попутно добавляя идентификатор документа.
-        this.workouts = workoutsRef.value.map((doc) => ({ id: doc.id, ...doc })) as Workout[];
-      }
+    /**
+     * Обновление данных в хранилище.
+     */
+    updateDataInStoreFromDB(): void {
+      // Тренировки.
+      this.workouts = this.getDataFromDB<Workout>('workout')
+      // Активности.
+      this.activities = this.getDataFromDB<Activity>('activities')
+      // Погода.
+      this.weather = this.getDataFromDB<Weather>('weatherDescriptions')
+      // Статистика за годы, месяцы, недели.
+      this.statistic.weeks = this.getDataFromDB<WeekData>('weeksData')
+      this.statistic.months = this.getDataFromDB<MonthData>('monthsData')
+      this.statistic.years = this.getDataFromDB<YearData>('yearsData')
     },
     /**
-     * Обновление списка активностей в хранилище из БД.
-     * В случае, если будет получен пустой массив с данными,
-     * произойдёт рекурсивный вызов функции с флагом повторного запуска.
-     * Если и второй раз будет получен пустой массив, значит требуется вмешательство техножрецов.
-     * @param isRestart Флаг повторного запуска.
+     * Возвращает из БД данные по наименованию коллекции.
+     * @param storeCollection Наименование коллекции.
+     * @returns Данные из БД или пустой массив.
      */
-    updateActivitiesFromDB(isRestart: boolean = false) {
+    getDataFromDB<T>(storeCollection: string): T[] {
       // Загружаем данные из Firestore.
-      const activitiesRef = useCollection(collection(useFirestore(), 'activities'))
+      const storeRef = useCollection(collection(useFirestore(), storeCollection))
       // Если получен пустой массив, то выбрасывается ошибка. Здесь всегда должны приходить данные.
-      if (!activitiesRef.value.length) {
-        // Проверяем флаг повторного запуска.
-        if (isRestart) {
-          // Если установлен - выводим сообщение об ошибке.
-          this.setErrorFlag('Что-то пошло не так. Обновите, пожалуйста, страницу.')
-          console.error('Получен пустой массив <activities>.')
-        } else {
-          // Если нет - перезапускаем функцию с флагом.
-          this.updateActivitiesFromDB(true)
-        }
-      } else {
-        // Извлекаем данные, попутно добавляя идентификатор документа.
-        this.activities = activitiesRef.value.map((doc) => ({ id: doc.id, ...doc })) as Activity[];
-      }
-    },
-    // Обновление данных о погоде из БД.
-    updateWeatherFromDB() {
-      // Загружаем данные из Firestore.
-      const weatherRef = useCollection(collection(useFirestore(), 'weatherDescriptions'))
-      // Если получен пустой массив, то выбрасывается ошибка. Здесь всегда должны приходить данные.
-      if (!weatherRef.value.length) {
+      if (!storeRef.value.length) {
         this.setErrorFlag('Что-то пошло не так. Обновите, пожалуйста, страницу.')
-        console.error('Получен пустой массив <weather>.')
+        console.error(`Получен пустой массив <${storeCollection}>.`)
+        return []
       } else {
         // Извлекаем данные, попутно добавляя идентификатор документа.
-        this.weather = weatherRef.value.map((doc) => ({ idWeather: doc.id, ...doc })) as Weather[];
+        return storeRef.value.map((doc) => ({ id: doc.id, ...doc })) as T[];
       }
     },
     /**

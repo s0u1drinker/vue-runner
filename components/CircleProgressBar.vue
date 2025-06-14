@@ -1,20 +1,20 @@
 <script setup lang="ts">
 const { title = '', progress = 0 } = defineProps<{
-  title: string,
+  title?: string,
   progress: number,
 }>()
 
 const radius = 70
 // Длина окружности.
 const circumference = Math.ceil(2 * 3.14 * radius)
+// Вычисление отступа на основании переданного значения props.progress.
+const offset = circumference * ((100 - progress) / 100)
 // Флаг анимации до зеленого цвета.
 const flagGreen = ref(false)
 // Флаг анимации до желтого цвета.
 const flagYellow = ref(false)
 // Смещение обводки. Если 0 - круг заполнен.
 const progressOffset = ref(circumference)
-// Вычисление отступа на основании переданного значения props.progress.
-const offset = computed(() => circumference * ((100 - progress) / 100))
 
 onMounted(() => {
   // Установка цвета и смещения.
@@ -23,7 +23,7 @@ onMounted(() => {
     progressOffset.value = 0
   } else if (progress >= 0) {
     flagYellow.value = (progress >= 50)
-    progressOffset.value = offset.value
+    progressOffset.value = offset
   } else {
     console.error(`Передано некорректное значение для отображения: ${progress}. Ожидалось число от 0 до 100.`)
   }
@@ -32,7 +32,10 @@ onMounted(() => {
 
 <template>
   <div class="c-prog-bar">
-    <span class="c-prog-bar__title">{{ title }}</span>
+    <div class="c-prog-bar__title">
+      <slot name="title" v-if="$slots.title"></slot>
+      <template v-else>{{ title }}</template>
+    </div>
     <div class="c-prog-bar__progress">
       <svg viewBox="0 0 160 160">
         <circle
@@ -58,6 +61,8 @@ onMounted(() => {
 </template>
 
 <style scoped>
+@import '@/assets/css/media.postcss';
+
 @keyframes greenProgress {
   50% { stroke: yellow; }
   100% { stroke: var(--green); }
@@ -69,13 +74,28 @@ onMounted(() => {
 
 .c-prog-bar {
 
+  &__title {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    white-space: pre-wrap;
+    gap: var(--indent-quarter);
+  }
+
   &__progress {
-    width: 8rem;
-    height: 8rem;
+    width: 7rem;
+    height: 7rem;
     display: flex;
     justify-content: center;
     align-items: center;
     position: relative;
+    margin-top: var(--indent);
+
+    @media (--viewport-md) {
+      width: 8rem;
+      height: 8rem;
+    }
   }
 
   &__circle {
@@ -100,6 +120,7 @@ onMounted(() => {
 
   &__counter {
     position: absolute;
+    font-size: var(--indent-and-half);
   }
 }
 </style>

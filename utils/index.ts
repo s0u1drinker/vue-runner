@@ -134,11 +134,7 @@ export function getPercent(currentValue: number, maxValue: number, precision: nu
   let percent = 0
 
   if (typeof currentValue === 'number' && typeof maxValue === 'number') {
-    percent = currentValue * 100 / maxValue
-
-    if (precision) {
-      percent = Number(percent.toFixed(precision))
-    }
+    percent = Number((currentValue * 100 / maxValue).toFixed(precision))
   } else {
     console.error(`Неверный тип переданных данных: ${currentValue} и ${maxValue}. Ожидались числа.`)
   }

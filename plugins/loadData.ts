@@ -8,9 +8,7 @@ export default defineNuxtPlugin(() => {
     // Поднимаем флаг загрузки данных.
     workoutStore.setLoadingDataFlag(true)
     // Обновляем данные в хранилище.
-    workoutStore.updateWorkoutsFromDB()
-    workoutStore.updateActivitiesFromDB()
-    workoutStore.updateWeatherFromDB()
+    workoutStore.updateDataInStoreFromDB()
   } catch (error) {
     // Поднимаем флаг ошибки.
     workoutStore.setErrorFlag(`Ошибка при загрузке данных: ${error}`)

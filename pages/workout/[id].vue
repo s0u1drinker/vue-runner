@@ -22,8 +22,8 @@ const workoutIndicators: Array<Indicator> = [
   },
   { title: 'Общее время', indicator: workout.trainingTime },
   {
-    icon: weather.icon || '',
-    title: weather.description,
+    icon: weather?.icon || '',
+    title: weather?.description || '',
     indicator: prettyTemperature(workout.temperature)
   },
   { title: 'Темп', indicator: workout.averagePace },

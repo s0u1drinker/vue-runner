@@ -24,8 +24,9 @@
   /* Основные отступы */
   --indent: 1rem;
   --indent-double: calc(var(--indent) * 2);/* 2x */
-  --indent-half: calc(var(--indent) / 2);/* x/2 */
-  --indent-quarter: calc(var(--indent) / 4);/* x/4 */
+  --indent-half: calc(var(--indent) / 2);/* 0.5x */
+  --indent-quarter: calc(var(--indent) / 4);/* 0.25x */
+  --indent-and-half: calc(var(--indent) + var(--indent-half)); /* 1.5x */
   --indent-three-quarters: calc(var(--indent-half) + var(--indent-quarter));/* 0.75x */
   /* Отступы в элементах */
   --list-item-padding: var(--indent-half) var(--indent);
