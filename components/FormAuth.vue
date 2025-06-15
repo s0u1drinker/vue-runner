@@ -15,7 +15,7 @@ function submitForm(): void {
 }
 
 function isValidData(): boolean {
-  errorMessage.value = 'Ошибка!'
+  errorMessage.value = 'Временно недоступно =('
   return false
 }
 </script>

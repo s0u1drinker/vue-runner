@@ -16,7 +16,7 @@ function submitForm(): void {
 }
 
 function isValidData(): boolean {
-  errorMessage.value = 'Ошибка!'
+  errorMessage.value = 'В данный момент регистрация неозможна =('
   return false
 }
 </script>
