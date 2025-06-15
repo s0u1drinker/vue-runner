@@ -42,20 +42,17 @@
   <div class="current-stat">
     <CircleProgressBar :progress="weekProgress">
       <template #title>
-        <span class="bold">На этой неделе:</span>
-        <span v-if="weekTitle">{{ weekTitle }}</span>
+        <ChartTitle header="На этой неделе:" :body="weekTitle" />
       </template>
     </CircleProgressBar>
     <CircleProgressBar :progress="monthProgress">
       <template #title>
-        <span class="bold">В этом месяце:</span>
-        <span v-if="monthTitle">{{ monthTitle }}</span>
+        <ChartTitle header="В этом месяце:" :body="monthTitle" />
       </template>
     </CircleProgressBar>
     <CircleProgressBar :progress="yearProgress">
       <template #title>
-        <span class="bold">В этом году:</span>
-        <span v-if="yearTitle">{{ yearTitle }}</span>
+        <ChartTitle header="В этом году:" :body="yearTitle" />
       </template>
     </CircleProgressBar>
   </div>

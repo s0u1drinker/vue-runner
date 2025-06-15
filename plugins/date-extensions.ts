@@ -20,10 +20,7 @@ export default defineNuxtPlugin(() => {
     const dayOfYear = Math.floor(diff / oneDay)
     // Магия вычисления номера недели.
     const weekNumber = Math.ceil((dayOfYear + startOfYear.getDay() + 1) / 7)
-    // Номер первого в году дня недели для корректировки. 
-    const firstDayOfWeek = startOfYear.getDay()
-
     // Корректируем номер недели, если неделя начинается с понедельника.
-    return (firstDayOfWeek === 0) ? weekNumber - 1 : weekNumber
+    return (this.getDay() === 0) ? weekNumber - 1 : weekNumber
   }
 })
