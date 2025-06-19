@@ -1,4 +1,21 @@
 /**
+ * Дни недели.
+ */
+export const DAYS_OF_WEEK: string[] = [ 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье' ]
+/**
+ * Месяцы.
+ */
+export const MONTHS: string[] = [ '', 'Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь' ]
+/**
+ * Данные о текущем дне.
+ */
+export const TODAY_DATE = {
+  DATE: new Date(),
+  getFullYear() { return this.DATE.getFullYear() },
+  getMonth() { return this.DATE.getMonth() + 1 },
+  getWeekNumber() { return this.DATE.getWeekNumber() },
+}
+/**
  * Опции для Intl.DateTimeFormat.
  */
 export const DATE_TIME_FORMAT_OPTIONS: Intl.DateTimeFormatOptions = {
@@ -10,7 +27,6 @@ export const DATE_TIME_FORMAT_OPTIONS: Intl.DateTimeFormatOptions = {
   minute: 'numeric',
   second: 'numeric'
 }
-
 /**
  * Список возможных ошибок в приложении.
  */

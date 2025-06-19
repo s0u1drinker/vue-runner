@@ -1,18 +1,54 @@
-<script setup>
+<script setup lang="ts">
 import { storeToRefs } from 'pinia'
+import type { Workout } from '@/types/workout'
+import type { FilterPeriod } from '@/types/filterPeriod'
 
 const workoutStore = useWorkoutStore()
 const { workouts } = storeToRefs(workoutStore)
+// Массив с тренировками, который будет отображаться. К нему будут применяться фильтры и сортировки.
+const workoutsToShow = ref<Workout[]>([])
+// Фильтрация данных по периоду.
+// FIXME: Необходимо унифицировать функцию фильтрации, т.к. фильтров будет много и у всех будут разные типы.
+// TODO: Да и, в целом, не мешало бы продумать вариант с переносом фильтров и <workoutsToShow> в хранилище.
+// TODO: P.S.: Возможно, "Hydration node mismatch" можно исправить манипуляциями, описанными выше.
+const filterDataByPeriod = (filter: FilterPeriod) => {
+  switch (filter.value) {
+    case '':
+      // Здесь достаточно поверхностного клонирования.
+      workoutsToShow.value = [ ...workouts.value ]
+      break
+    case 'year':
+      workoutsToShow.value = workouts.value.filter((item) => new Date(item.dateStart).getFullYear() === Number(filter.data?.year))
+      break
+    case 'month':
+      workoutsToShow.value = workouts.value.filter((item) => {
+        const dateStart = new Date(item.dateStart)
+
+        return (dateStart.getFullYear() === Number(filter.data?.year)) && ((dateStart.getMonth() + 1) === Number(filter.data?.month))
+      })
+      break
+    case 'week':
+      workoutsToShow.value = workouts.value.filter((item) => {
+        const dateStart = new Date(item.dateStart)
+
+        return (dateStart.getFullYear() === Number(filter.data?.year)) && (dateStart.getWeekNumber() === Number(filter.data?.week))
+      })
+      break
+    default:
+      console.warn(`Неизвестный тип фильтра по периоду: ${filter.value}`)
+      break
+  }
+}
 </script>
 
 <template>
   <div class="workouts">
     <h2>Список тренировок</h2>
-    <div class="block">
-      Какие-нибудь фильтры...
+    <div class="workouts__filters-wrapper block">
+      <FilterPeriod @set-filter="filterDataByPeriod" />
     </div>
     <div class="workouts__info">
-      <span class="workouts__info-item">Количество тренировок: {{ workouts.length }}</span>
+      <span class="workouts__info-item">Количество тренировок: {{ workoutsToShow.length }}</span>
     </div>
     <table class="workouts__table">
       <thead class="workouts__table-thead">
@@ -26,8 +62,14 @@ const { workouts } = storeToRefs(workoutStore)
           <th class="extra-column">Температура</th>
         </tr>
       </thead>
-      <tbody class="workouts__table-tbody">
-        <tr v-for="workout in workouts" :key="workout.id" @click="navigateTo(`/workout/${workout.id}`)">
+      <tbody class="workouts__table-tbody" v-if="workoutsToShow.length">
+        <tr
+          v-for="(workout, index) in workoutsToShow"
+          :key="workout.id"
+          @click="navigateTo(`/workout/${workout.id}`)"
+          role="button"
+          :tabindex="index"
+        >
           <td class="workouts__td">
             <Icon :name="workoutStore.getActivityByID(workout.idActivity).icon" />
             <span class="workouts__span_toggle">{{ workoutStore.getActivityByID(workout.idActivity).title }}</span>
@@ -41,6 +83,7 @@ const { workouts } = storeToRefs(workoutStore)
         </tr>
       </tbody>
     </table>
+    <div v-if="!workoutsToShow.length" class="workouts__no-data">Нет данных. Возможно, последний фильтр был лишний.</div>
   </div>
 </template>
 
@@ -112,6 +155,15 @@ const { workouts } = storeToRefs(workoutStore)
         display: inline;
       }
     }
+  }
+
+  &__filters-wrapper {
+    display: flex;
+  }
+
+  &__no-data {
+    text-align: center;
+    color: var(--gray);
   }
 }
 </style>

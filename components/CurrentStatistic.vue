@@ -1,10 +1,9 @@
 <script setup lang="ts">
   const workoutStore = useWorkoutStore()
   // Текущая дата.
-  const today = new Date()
-  const year = today.getFullYear()
-  const month = today.getMonth() + 1
-  const weekNumber = today.getWeekNumber()
+  const year = TODAY_DATE.getFullYear()
+  const month = TODAY_DATE.getMonth()
+  const weekNumber = TODAY_DATE.getWeekNumber()
   // Статистика.
   const yearStatistic = workoutStore.getYearStatistic(year)
   const monthStatistic = workoutStore.getMonthStatisticByMonth(year, month)

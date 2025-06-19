@@ -175,7 +175,7 @@ export const useWorkoutStore = defineStore('workout', {
       // Погода.
       this.weather = this.getDataFromDB<Weather>('weatherDescriptions')
       // Статистика за годы, месяцы, недели.
-      this.statistic.weeks = this.getDataFromDB<WeekData>('weeksData')
+      this.statistic.weeks = this.getDataFromDB<WeekData>('weeksData').sort((a, b) => a.weekNumber - b.weekNumber)
       this.statistic.months = this.getDataFromDB<MonthData>('monthsData')
       this.statistic.years = this.getDataFromDB<YearData>('yearsData')
     },
