@@ -1,24 +1,19 @@
 <script setup lang="ts">
 import type { RadioGroupValues } from '@/types/radioGroupValues'
 
-const { name, items, checked = 0 } = defineProps<{
+const { name, items, checked } = defineProps<{
   name: string,
   items: RadioGroupValues[],
   checked?: number,
 }>()
 
-const emit = defineEmits<{
-  changeValue: [ value: string ]
-}>()
 // Выбранное значение.
-const elementValue = ref('')
-
-watch(elementValue, () => {
-  emit('changeValue', elementValue.value)
-})
+const elementValue = defineModel()
 
 onMounted(() => {
-  elementValue.value = items[checked].radioValue
+  if (checked) {
+    elementValue.value = items[checked].radioValue
+  }
 })
 </script>
 

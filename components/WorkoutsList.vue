@@ -13,6 +13,7 @@ const workoutsToShow = ref<Workout[]>([])
 // TODO: P.S.: Возможно, "Hydration node mismatch" можно исправить манипуляциями, описанными выше.
 const filterDataByPeriod = (filter: FilterPeriod) => {
   switch (filter.value) {
+    case null:
     case '':
       // Здесь достаточно поверхностного клонирования.
       workoutsToShow.value = [ ...workouts.value ]
@@ -39,6 +40,10 @@ const filterDataByPeriod = (filter: FilterPeriod) => {
       break
   }
 }
+
+function groupDataByPeriod(period: string | null): void {
+  console.log(period)
+}
 </script>
 
 <template>
@@ -46,6 +51,7 @@ const filterDataByPeriod = (filter: FilterPeriod) => {
     <h2>Список тренировок</h2>
     <div class="workouts__filters-wrapper block">
       <FilterPeriod @set-filter="filterDataByPeriod" />
+      <GroupPeriod @group-by="groupDataByPeriod" />
     </div>
     <div class="workouts__info">
       <span class="workouts__info-item">Количество тренировок: {{ workoutsToShow.length }}</span>
@@ -159,6 +165,7 @@ const filterDataByPeriod = (filter: FilterPeriod) => {
 
   &__filters-wrapper {
     display: flex;
+    gap: var(--indent-double);
   }
 
   &__no-data {

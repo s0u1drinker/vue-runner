@@ -41,9 +41,7 @@ const weeks = ref<SelectData>({
   current: String(TODAY_DATE.getWeekNumber()),
 })
 // Значение выбранного периода.
-const period = ref('')
-// Изменение периода при нажатии на кнопку.
-const changePeriodFromButton = (newPeriod: string) => period.value = newPeriod
+const period = ref<string | null>(null)
 // Собираем данные фильтра и отдаём родителю.
 watchEffect(() => {
   const filter: FilterPeriod = {
@@ -76,17 +74,19 @@ onMounted(() => {
   <div class="f-period">
     <span class="f-period__title">Период:</span>
     <div class="f-period__inner">
-      <RadioGroupButtons name="period" :items="periods" @change-value="changePeriodFromButton" />
+      <RadioGroupButtons name="period" :items="periods" v-model="period" />
       <div class="f-period__values">
         <template v-if="period">
           <CustomSelect
             :options="years.list"
             placeholder=""
+            name="years"
             v-model="years.current"
           />
           <CustomSelect
             :options="months.list"
             placeholder=""
+            name="months"
             v-model="months.current"
             v-if="period === 'month'"
           />
@@ -94,6 +94,7 @@ onMounted(() => {
             class="f-period__fix-select"
             :options="weeks.list"
             placeholder=""
+            name="weeks"
             v-model="weeks.current"
             v-if="period === 'week'"
           />

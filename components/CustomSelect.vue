@@ -5,8 +5,9 @@ import type { SelectOptions } from '@/types/selectOptions'
 // Также отображается в aria-label, если в placeholder "пришла" пустая строка.
 const defaultPlaceholder = 'Выберите элемент...'
 
-const { options, placeholder = defaultPlaceholder } = defineProps<{
+const { options, name, placeholder = defaultPlaceholder } = defineProps<{
   options: SelectOptions[],
+  name: string,
   placeholder?: string
 }>()
 
@@ -19,6 +20,7 @@ const selectValue = defineModel()
     class="select"
     v-model="selectValue"
     :aria-label="placeholder || defaultPlaceholder"
+    :name
   >
     <option value="-1" disabled hidden>{{ placeholder }}</option>
     <option
