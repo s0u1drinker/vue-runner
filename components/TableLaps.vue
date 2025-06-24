@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { Lap } from '@/types/lap'
 import type { LapComputed } from '@/types/lapComputed';
+import type { TableTHead } from '@/types/tableThead';
 
 const props = defineProps<{
   laps: Lap[],
@@ -10,16 +11,13 @@ const props = defineProps<{
 /**
  * Заголовки столбцов для таблицы.
  */
-const theadList: Array<{
-  title: string,
-  extraColumn: boolean
-}> = [
-  { title: 'Круг', extraColumn: false, },
+const theadList: TableTHead[] = [
+  { title: 'Круг', },
   { title: 'Время круга', extraColumn: true, },
-  { title: 'Темп', extraColumn: false, },
+  { title: 'Темп', },
   { title: '', extraColumn: true, },
-  { title: 'Пульс', extraColumn: false, },
-  { title: 'Общее время', extraColumn: false, },
+  { title: 'Пульс', },
+  { title: 'Общее время', },
 ]
 
 /**
@@ -73,7 +71,7 @@ function checkClass(pace: string): string | null {
         <tr>
           <th
             v-for="(th, index) in theadList"
-            :class="{ 'extra-column': th.extraColumn }"
+            :class="{ 'extra-column': th?.extraColumn }"
             :key="`${th.title}-${index}`"
           >{{ th.title }}</th>
         </tr>

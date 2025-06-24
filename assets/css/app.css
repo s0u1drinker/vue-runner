@@ -10,7 +10,7 @@
   }
 }
 /* Tags */
-td, th {
+th, td {
   padding: var(--indent-quarter) var(--indent-half);
   text-align: center;
 
@@ -92,4 +92,49 @@ td, th {
 
 .italic {
   font-style: italic;
+}
+/*Flex*/
+.flex {
+  display: flex;
+
+  &_ai {
+
+    &-center {
+      align-items: center;
+    }
+  }
+
+  &_gap {
+
+    &-half {
+      gap: var(--indent-half);
+    }
+  }
+}
+/*Show media*/
+.show-lg {
+  display: none;
+
+  @media (--viewport-lg) {
+    display: block;
+  }
+
+  &_inline {
+    @media (--viewport-lg) {
+      display: inline;
+    }
+  }
+}
+/*Временный костыль*/
+.table__tr {
+  transition: background-color var(--animation);
+  
+  &:hover {
+    background-color: var(--powder-blue);
+    cursor: pointer;
+  }
+  
+  & + & {
+    border-top: var(--border);
+  }
 }

@@ -154,3 +154,20 @@ export function getRandom(min: number, max: number): number {
   
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
+
+/**
+ * Среднее значение.
+ * @param all Массив чисел или их сумма.
+ * @param count Количество элементов.
+ * @param precision Точность.
+ * @returns Среднее арифметическое.
+ */
+export function getAverage(all: number | number[], count: number, precision: 0 | 1 | 2 = 1): number {
+  let sum
+
+  if (typeof all === 'object') {
+    sum = all.reduce((a, b) => a + b, 0)
+  } else sum = all
+
+  return Number((sum / count).toFixed(precision)) || 0
+}
