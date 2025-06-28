@@ -1,105 +1,116 @@
 <script setup lang="ts">
 import type { RadioGroupValues } from '@/types/radioGroupValues'
-import type { SelectData } from '@/types/selectData'
+import type { SelectOptions } from '@/types/selectOptions'
 import type { FilterPeriod } from '@/types/filterPeriod'
 
-// FIXME: Есть претензии к стилевому оформлению компонента (костыль с шириной select`а для выбора недели).
 // FIXME: Необходимо ещё раз продумать оформление компоннета.
-
-const workoutStore = useWorkoutStore()
-const { statistic } = storeToRefs(workoutStore)
 
 const emit = defineEmits<{
   setFilter: [ value: FilterPeriod ]
 }>()
 
 const periods: RadioGroupValues[] = [
-  { radioValue: '', label: 'Все', },
   { radioValue: 'year', label: 'Год', },
   { radioValue: 'month', label: 'Месяц', },
   { radioValue: 'week', label: 'Неделя', },
 ]
-// Текущее значение и элементы списка "Год".
-const years = ref<SelectData>({
-  list: statistic.value.years.map((item) => {
-    return { value: String(item.year), label: String(item.year) }
-  }),
-  current: String(TODAY_DATE.getFullYear()),
-})
-// Текущее значение и элементы списка "Месяц".
-const months = ref<SelectData>({
-  list: statistic.value.months.map((item) => {
-    return { value: String(item.month), label: MONTHS[item.month] }
-  }),
-  current: String(TODAY_DATE.getMonth()),
-})
-// Текущее значение и элементы списка "Неделя".
-const weeks = ref<SelectData>({
-  list: statistic.value.weeks.map((item) => {
-    return { value: String(item.weekNumber), label: `#${item.weekNumber}: ${prettyDate(item.dateStart).date} - ${prettyDate(item.dateEnd).date}` }
-  }),
-  current: String(TODAY_DATE.getWeekNumber()),
-})
+// Флаг для отображения содержимого блока с управляющими элементами.
+const showOptions = ref<boolean>(false)
 // Значение выбранного периода.
 const period = ref<string | null>(null)
-// Собираем данные фильтра и отдаём родителю.
-watchEffect(() => {
-  const filter: FilterPeriod = {
+// Список недель.
+const listOfWeeks = ref<SelectOptions[]>([])
+// Выбранный год.
+const targetYear = ref<string>(String(TODAY_DATE.getFullYear()))
+// Выбранный месяц.
+const targetMonth = ref<string>(String(TODAY_DATE.getMonth()))
+// Выбранная неделя.
+const targetWeek = ref<string>('')
+// Класс для кнопки добавить/удалить фильтр.
+const controlButtonClass = computed<string>(() => {
+  return showOptions.value ? 'button_red' : 'button_blue'
+})
+// Значение фильтра.
+const filterBy = computed<FilterPeriod>(() => {
+  const returnValue: FilterPeriod = {
     type: 'period',
     value: period.value
   }
 
-  if (filter.value) {
-    filter.data = { year: years.value.current }
+  if (returnValue.value) {
+    returnValue.data = { year: targetYear.value }
 
-    switch (filter.value) {
-      case 'month':
-        filter.data.month = months.value.current
-        break
+    switch (returnValue.value) {
       case 'week':
-        filter.data.week = weeks.value.current
+        returnValue.data.week = targetWeek.value
+        // break не используется, т.к. значение месяца нужно в обоих случаях.
+      case 'month':
+        returnValue.data.month = targetMonth.value
         break
     }
   }
 
-  emit('setFilter', filter)
+  return returnValue
 })
-
-onMounted(() => {
-  period.value = periods[0].radioValue
+// При изменении значения выбранного года или месяца обновляет список недель и выбирает первую в списке.
+watchEffect(() => {
+  listOfWeeks.value = getListOfWeeksForMonthToSelect(targetYear.value, targetMonth.value)
+  targetWeek.value = listOfWeeks.value[0].value
 })
+// Собираем данные фильтра и отдаём родителю.
+watch(filterBy, () => {
+  emit('setFilter', filterBy.value)
+})
+// При выборе периода показывает блок с CustomSelect, иначе сбрасывает фильтр.
+function toggleOptions(): void {
+  showOptions.value = !showOptions.value
+  
+  if (!showOptions.value) {
+    period.value = null
+    targetYear.value = String(TODAY_DATE.getFullYear())
+    targetMonth.value = String(TODAY_DATE.getMonth())
+    targetWeek.value = String(TODAY_DATE.getWeekNumber())
+  }
+}
 </script>
 
 <template>
   <div class="f-period">
-    <span class="f-period__title">Период:</span>
-    <div class="f-period__inner">
-      <RadioGroupButtons name="period" :items="periods" v-model="period" />
-      <div class="f-period__values">
-        <template v-if="period">
-          <CustomSelect
-            :options="years.list"
-            placeholder=""
-            name="years"
-            v-model="years.current"
-          />
-          <CustomSelect
-            :options="months.list"
-            placeholder=""
-            name="months"
-            v-model="months.current"
-            v-if="period === 'month'"
-          />
-          <CustomSelect
-            class="f-period__fix-select"
-            :options="weeks.list"
-            placeholder=""
-            name="weeks"
-            v-model="weeks.current"
-            v-if="period === 'week'"
-          />
-        </template>
-        <span class="f-period__all-span" v-else>Отображаются все тренировки.</span>
+    <div class="f-period__header">
+      <span class="f-period__title">Период</span>
+      <div class="f-period__control">
+        <button class="button" :class="controlButtonClass" @click="toggleOptions">
+          <span class="f-period__button-text" :class="{ 'f-period__button-text_rotate': showOptions }">+</span>
+        </button>
+      </div>
+    </div>
+    <div class="f-period__inner" :class="{ 'f-period__inner_show': showOptions }">
+      <RadioGroupButtons
+        name="period"
+        :items="periods"
+        v-model="period"
+      />
+      <div class="f-period__values" v-if="period">
+        <CustomSelect
+          :options="YEARS_FOR_SELECT"
+          placeholder=""
+          name="years"
+          v-model="targetYear"
+        />
+        <CustomSelect
+          :options="MONTHS_FOR_SELECT"
+          placeholder=""
+          name="months"
+          v-model="targetMonth"
+          v-if="period === 'month' || period === 'week'"
+        />
+        <CustomSelect
+          :options="listOfWeeks"
+          placeholder=""
+          name="weeks"
+          v-model="targetWeek"
+          v-if="period === 'week'"
+        />
       </div>
     </div>
   </div>
@@ -109,33 +120,57 @@ onMounted(() => {
 @import '@/assets/css/media.postcss';
 
 .f-period {
-  display: flex;
-  flex-direction: column;
-  gap: var(--indent-half);
+  --button-size: 1.5rem;
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--indent);
+    align-items: center;
+  }
 
   &__title {
     font-weight: bold;
   }
 
+  &__control {
+
+    button {
+      width: var(--button-size);
+      height: var(--button-size);
+      font-size: 1.25rem;
+      padding: 0;
+    }
+  }
+
+  &__button-text {
+    transition: rotate var(--animation);
+    width: var(--button-size);
+    height: var(--button-size);
+
+    &_rotate {
+      rotate: 45deg;
+    }
+  }
+
+  &__inner {
+    height: 0;
+    opacity: 0;
+    overflow: hidden;
+    margin-top: var(--indent-half);
+    transition: opacity var(--animation), height var(--animation);
+
+    &_show {
+      height: auto;
+      opacity: 1;
+    }
+  }
+
   &__values {
-    padding-top: var(--indent-half);
     display: flex;
     gap: var(--indent-half);
-    height: 2rem;
-    align-items: center;
-  }
-
-  &__all-span {
-    color: var(--gray);
-    font-style: italic;
-  }
-
-  &__fix-select {
-    width: 162px;
-
-    @media (--viewport-sm) {
-      width: auto;
-    }
+    flex-wrap: wrap;
+    margin-top: var(--indent-half);
   }
 }
 </style>

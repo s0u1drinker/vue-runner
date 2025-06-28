@@ -8,13 +8,12 @@ type PeriodGroup = string | null
 const workoutStore = useWorkoutStore()
 const { workouts, statistic } = storeToRefs(workoutStore)
 // Массив с тренировками, который будет отображаться. К нему будут применяться фильтры и сортировки.
-const workoutsToShow = ref<Workout[]>([])
+const workoutsToShow = ref<Workout[]>([...workouts.value])
 // Период для группировки информации.
 const periodGroup = ref<PeriodGroup>(null)
 // Фильтрация данных по периоду.
 // FIXME: Необходимо унифицировать функцию фильтрации, т.к. фильтров будет много и у всех будут разные типы.
 // TODO: Да и, в целом, не мешало бы продумать вариант с переносом фильтров и <workoutsToShow> в хранилище.
-// TODO: P.S.: Возможно, "Hydration node mismatch" можно исправить манипуляциями, описанными выше.
 const filterDataByPeriod = (filter: FilterPeriod): void => {
   switch (filter.value) {
     case null:
@@ -53,9 +52,13 @@ function groupDataByPeriod(period: PeriodGroup): void {
 <template>
   <div class="workouts">
     <h2>Список тренировок</h2>
-    <div class="workouts__filters-wrapper block">
-      <FilterPeriod @set-filter="filterDataByPeriod" />
-      <GroupPeriod @group-by="groupDataByPeriod" />
+    <div class="workouts__options flex flex_wrap flex_ai-start">
+      <BlockOption title="Фильтры">
+        <FilterPeriod @set-filter="filterDataByPeriod" />
+      </BlockOption>
+      <BlockOption title="Группировать">
+        <GroupPeriod @group-by="groupDataByPeriod" />
+      </BlockOption>
     </div>
     <div class="workouts__info">
       <span class="workouts__info-item">Количество тренировок: {{ workoutsToShow.length }}</span>
@@ -80,9 +83,7 @@ function groupDataByPeriod(period: PeriodGroup): void {
     margin-top: var(--indent);
   }
 
-  &__filters-wrapper {
-    display: flex;
-    flex-wrap: wrap;
+  &__options {
     gap: var(--indent);
 
     @media (--viewport-md) {

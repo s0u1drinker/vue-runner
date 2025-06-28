@@ -1,27 +1,30 @@
 <script setup lang="ts">
 import type { RadioGroupValues } from '@/types/radioGroupValues'
 
-const periods: RadioGroupValues[] = [
-  { radioValue: 'year', label: 'Год', },
-  { radioValue: 'month', label: 'Месяц', },
-  { radioValue: 'week', label: 'Неделя', },
-]
+// FIXME: Компоненты <FilterPeriod> и <GroupPeriod> очень похожи. Можно попытаться объединить.
 
 const emit = defineEmits<{
   groupBy: [ value: string | null ]
 }>()
 
+const periods: RadioGroupValues[] = [
+  { radioValue: 'year', label: 'Год', },
+  { radioValue: 'month', label: 'Месяц', },
+  { radioValue: 'week', label: 'Неделя', },
+]
+// Флаг отображения RadioGroupButtons.
 const showOptions = ref<boolean>(false)
+// Параметр, по которому осуществляется группировка.
 const groupPeriod = ref(null)
-
-const controlButtonClass = computed(() => {
+// Класс кнопки добавить/удалить.
+const controlButtonClass = computed<string>(() => {
   return showOptions.value ? 'button_red' : 'button_blue'
 })
-
+// При изменении параметра группировки генерируется событие.
 watch(groupPeriod, () => {
   emit('groupBy', groupPeriod.value)
 })
-
+// Показать/скрыть настройки.
 function toggleOptions(): void {
   showOptions.value = !showOptions.value
   
@@ -34,7 +37,7 @@ function toggleOptions(): void {
 <template>
   <div class="g-period">
     <div class="g-period__header">
-      <span class="g-period__title">Группировать по</span>
+      <span class="g-period__title">Период</span>
       <div class="g-period__control">
         <button class="button" :class="controlButtonClass" @click="toggleOptions">
           <span class="g-period__button-text" :class="{ 'g-period__button-text_rotate': showOptions }">+</span>

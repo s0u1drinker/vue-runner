@@ -34,16 +34,6 @@ th, td {
   }
 }
 
-.block {
-  border: var(--border);
-  border-radius: var(--border-radius);
-  padding: var(--indent-three-quarters);
-
-  @media (--viewport-sm) {
-    padding: var(--indent);
-  }
-}
-
 .color {
   &_red {
     color: var(--red);
@@ -99,12 +89,25 @@ th, td {
 
   &_ai {
 
+    &-start {
+      align-items: flex-start;
+    }
+
     &-center {
       align-items: center;
     }
   }
 
+  &_column {
+    flex-direction: column;
+  }
+
+  &_wrap {
+    flex-wrap: wrap;
+  }
+
   &_gap {
+    gap: var(--indent);
 
     &-half {
       gap: var(--indent-half);

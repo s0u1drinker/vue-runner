@@ -1,4 +1,5 @@
 import type { DateFormat } from "@/types/dateFormat"
+import type { SelectOptions } from "@/types/selectOptions"
 
 /**
  * Возвращает температуру со знаками +/- и °.
@@ -170,4 +171,49 @@ export function getAverage(all: number | number[], count: number, precision: 0 |
   } else sum = all
 
   return Number((sum / count).toFixed(precision)) || 0
+}
+
+/**
+ * Возвращает список недель для элемента <CustomSelect> за указанный период.
+ * @param year Год.
+ * @param month Месяц.
+ * @returns Список недель.
+ */
+export function getListOfWeeksForMonthToSelect(year: number | string, month: number | string): SelectOptions[] {
+  // Если пришли строки - переводим их в числа.
+  if (typeof year === 'string') year = +year
+  if (typeof month === 'string') month = +month
+  // Если перевод оказался удачным - работаем.
+  if (year && month) {
+    // Первый день месяца.
+    const date = new Date(year, month - 1, 1)
+    // Набор для хранения информации о неделях.
+    const uniqueWeekNumbers = new Map<number, SelectOptions>()
+    // Теперь перебираем все дни месяца.
+    while (date.getMonth() === (month - 1)) {
+      // Номер недели.
+      const weekNumber: number = date.getWeekNumber()
+      // Если в наборе нет элемента с таким ключом - вычисляем значение и добавляем.
+      if (!uniqueWeekNumbers.has(weekNumber)) {
+        // День недели. Воскресенье - 7-й.
+        const day: number = date.getDay() || 7
+        // Понедельник.
+        const dateStart = new Date(year, month - 1, date.getDate() - day + 1)
+        // Воскресенье.
+        const dateEnd = new Date(year, month - 1, date.getDate() + (7 - day))
+        // Добавляем данные в набор.
+        uniqueWeekNumbers.set(weekNumber, {
+          value: `${weekNumber}`,
+          label: `#${weekNumber}: ${prettyDate(dateStart.toISOString()).date} - ${prettyDate(dateEnd.toISOString()).date}`
+        })
+      }
+      // Переходим к следующему дню.
+      date.setDate(date.getDate() + 1)
+    }
+    // Из значений набора Map формируем массив и возвращаем. 
+    return Array.from(uniqueWeekNumbers.values())
+  } else {
+    console.error(`Переданное значение не является числом: ${year} или ${month}.`)
+    return []
+  }
 }

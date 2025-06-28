@@ -7,7 +7,7 @@ const props = defineProps<{
 </script>
 
 <template>
-  <WorkoutBlock
+  <BlockIndicator
     v-for="(indicator, index) in props.indicators"
     :key="index"
     :icon="indicator.icon || ''"

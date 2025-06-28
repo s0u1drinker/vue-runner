@@ -72,7 +72,7 @@ definePageMeta({
     <div class="workout">
       <div class="workout__comment">{{ workout.comment }}</div>
       <div class="workout__indicators">
-        <WorkoutBlocksWrapper :indicators="workoutIndicators" />
+        <WorkoutIndicators :indicators="workoutIndicators" />
       </div>
       <TableLaps :laps="workout.laps" :lapDistance="workout.lapDistance" />
       <div class="workout__graph">

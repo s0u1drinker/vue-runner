@@ -5,27 +5,31 @@ const props = defineProps<Indicator>()
 </script>
 
 <template>
-  <div class="block w-block" v-if="props.indicator">
-    <div class="w-block__title">
-      <Icon v-if="props.icon" class="w-block__icon" :name="props.icon" size="1.25rem" />
+  <div class="block-indicator" v-if="props.indicator">
+    <div class="block-indicator__title">
+      <Icon v-if="props.icon" class="block-indicator__icon" :name="props.icon" size="1.25rem" />
       {{ props.title }}
     </div>
-    <div class="w-block__indicator">{{ props.indicator }}</div>
+    <div class="block-indicator__indicator">{{ props.indicator }}</div>
   </div>
 </template>
 
 <style lang="postcss" scoped>
 @import '@/assets/css/media.postcss';
 
-.w-block {
+.block-indicator {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: var(--indent-quarter);
   min-width: 6rem;
+  border: var(--border);
+  border-radius: var(--border-radius);
+  padding: var(--indent-three-quarters);
 
   @media (--viewport-sm) {
+    padding: var(--indent);
     min-width: 7rem;
   }
 
