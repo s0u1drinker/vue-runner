@@ -1,5 +1,10 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
+  compatibilityDate: '2024-11-01',
+  css: [
+    '@/assets/css/main.css',
+  ],
+  devtools: { enabled: false },
   experimental: {
     defaults: {
       nuxtLink: {
@@ -7,16 +12,11 @@ export default defineNuxtConfig({
       }
     }
   },
-  compatibilityDate: '2024-11-01',
-  css: [
-    '@/assets/css/main.css',
-  ],
-  modules: [
-    '@nuxt/icon',
-    '@nuxtjs/google-fonts',
-    '@pinia/nuxt',
-    'nuxt-vuefire'
-  ],
+  googleFonts: {
+    families: {
+      'Open Sans': true
+    }
+  },
   icon: {
     mode: 'svg',
     size: '16px',
@@ -27,11 +27,15 @@ export default defineNuxtConfig({
       },
     ],
   },
-  googleFonts: {
-    families: {
-      'Open Sans': true
-    }
-  },
+  modules: [
+    '@nuxt/icon',
+    '@nuxtjs/google-fonts',
+    '@pinia/nuxt',
+    'nuxt-vuefire'
+  ],
+  plugins: [
+    { src: '@/plugins/loadData.ts' },
+  ],
   postcss: {
     plugins: {
       'postcss-nested': {},
@@ -39,9 +43,6 @@ export default defineNuxtConfig({
       autoprefixer: {},
     }
   },
-  plugins: [
-    { src: '@/plugins/loadData.ts' },
-  ],
   vuefire: {
     config: {
       apiKey: process.env.FIREBASE_API_KEY,
@@ -50,5 +51,4 @@ export default defineNuxtConfig({
       appId: process.env.FIREBASE_APP_ID,
     }
   },
-  devtools: { enabled: false }
 })

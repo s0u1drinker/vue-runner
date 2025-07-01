@@ -6,7 +6,10 @@ import type { FilterPeriod } from '@/types/filterPeriod'
 type PeriodGroup = string | null
 
 const workoutStore = useWorkoutStore()
-const { workouts, statistic } = storeToRefs(workoutStore)
+const goalStore = useGoalStore()
+
+const { workouts } = storeToRefs(workoutStore)
+const { goals } = storeToRefs(goalStore)
 // Массив с тренировками, который будет отображаться. К нему будут применяться фильтры и сортировки.
 const workoutsToShow = ref<Workout[]>([...workouts.value])
 // Период для группировки информации.
@@ -63,9 +66,9 @@ function groupDataByPeriod(period: PeriodGroup): void {
     <div class="workouts__info">
       <span class="workouts__info-item">Количество тренировок: {{ workoutsToShow.length }}</span>
     </div>
-    <WorkoutsGroupYearTable :rows="statistic.years" v-if="periodGroup === 'year'" />
-    <WorkoutsGroupMonthTable :rows="statistic.months" v-else-if="periodGroup === 'month'" />
-    <WorkoutsGroupWeekTable :rows="statistic.weeks" v-else-if="periodGroup === 'week'" />
+    <WorkoutsGroupYearTable :rows="goals.years" v-if="periodGroup === 'year'" />
+    <WorkoutsGroupMonthTable :rows="goals.months" v-else-if="periodGroup === 'month'" />
+    <WorkoutsGroupWeekTable :rows="goals.weeks" v-else-if="periodGroup === 'week'" />
     <WorkoutsDayTable :rows="workoutsToShow" v-else />
   </div>
 </template>

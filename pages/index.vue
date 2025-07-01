@@ -1,11 +1,8 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
-import { useWorkoutStore } from '@/stores/workoutStore'
-// Components
-import WorkoutsList from '@/components/WorkoutsList.vue'
 
-const workoutStore = useWorkoutStore()
-const { isLoadingData, error } = storeToRefs(workoutStore)
+const appStore = useAppStore()
+const { isLoadingData, error } = storeToRefs(appStore)
 </script>
 
 <template>

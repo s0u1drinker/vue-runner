@@ -22,6 +22,8 @@ export const DATE_TIME_FORMAT_OPTIONS: Intl.DateTimeFormatOptions = {
  * Список возможных ошибок в приложении.
  */
 export const APP_ERRORS: Map<string, string> = new Map([
-  // VV - variable value - значение переменной
-  [ 'VV01', 'Переменная <workout> не содержит данных, т.к. функция <getWorkoutByID> вернула <undefined>.']
+  // VV - variable value - значение переменной.
+  [ 'VV01', 'Переменная <workout> не содержит данных, т.к. функция <getWorkoutByID> вернула <undefined>.'],
+  // SU - show to user - сообщения об ошибках для пользователя.
+  [ 'SU01', 'Что-то пошло не так. Обновите, пожалуйста, страницу.' ],
 ])

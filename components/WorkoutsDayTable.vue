@@ -2,7 +2,7 @@
 import type { Workout } from '@/types/workout'
 import type { TableTHead } from '@/types/tableThead'
 
-const workoutStore = useWorkoutStore()
+const activityStore = useActivityStore()
 
 const { rows } = defineProps<{
   rows: Workout[],
@@ -41,8 +41,8 @@ const thead: TableTHead[] = [
         :tabindex="30 + index"
       >
         <td class="flex flex_ai-center flex_gap-half">
-          <Icon :name="workoutStore.getActivityByID(workout.idActivity).icon" />
-          <span class="show-lg show-lg_inline">{{ workoutStore.getActivityByID(workout.idActivity).title }}</span>
+          <Icon :name="activityStore.getActivityByID(workout.idActivity).icon" />
+          <span class="show-lg show-lg_inline">{{ activityStore.getActivityByID(workout.idActivity).title }}</span>
         </td>
         <td>{{ prettyDate(workout.dateStart).date }}</td>
         <td>{{ `${workout.distance} км` }}</td>

@@ -1,19 +1,28 @@
 import { defineNuxtPlugin } from '#app'
-import { useWorkoutStore } from '@/stores/workoutStore'
 
-export default defineNuxtPlugin(() => {
-  const workoutStore = useWorkoutStore();
+export default defineNuxtPlugin(async () => {
+  const appStore = useAppStore()
+  const workoutStore = useWorkoutStore()
+  const activityStore = useActivityStore()
+  const weatherStore = useWeatherStore()
+  const goalStore = useGoalStore()
 
-  try {
-    // Поднимаем флаг загрузки данных.
-    workoutStore.setLoadingDataFlag(true)
-    // Обновляем данные в хранилище.
-    workoutStore.updateDataInStoreFromDB()
-  } catch (error) {
+  // Поднимаем флаг загрузки данных.
+  appStore.setLoadingDataFlag(true)
+
+  await Promise.all([
+    workoutStore.updateWorkoutsFromDB(),
+    activityStore.updateActivitiesFromDB(),
+    weatherStore.updateWeatherFromDB(),
+    goalStore.updateGoalsFromDB()
+  ])
+  .catch((error) => {
+    console.error(`Ошибка при загрузке данных: ${error}`)
     // Поднимаем флаг ошибки.
-    workoutStore.setErrorFlag(`Ошибка при загрузке данных: ${error}`)
-  } finally {
+    appStore.setErrorFlag(APP_ERRORS.get('SU01') as string)
+  })
+  .finally(() => {
     // Снимаем флаг загрузки данных.
-    workoutStore.setLoadingDataFlag(false)
-  }
-});
+    appStore.setLoadingDataFlag(false)
+  })
+})

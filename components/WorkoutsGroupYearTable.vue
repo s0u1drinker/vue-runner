@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import type { YearData } from '@/types/yearData'
+import type { GoalYear } from '@/types/goalYear'
 
 const { rows } = defineProps<{
-  rows: YearData[],
+  rows: GoalYear[],
 }>()
 </script>
 

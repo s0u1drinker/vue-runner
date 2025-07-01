@@ -1,13 +1,13 @@
 <script setup lang="ts">
-  const workoutStore = useWorkoutStore()
+  const goalStore = useGoalStore()
   // Текущая дата.
   const year = TODAY_DATE.getFullYear()
   const month = TODAY_DATE.getMonth()
   const weekNumber = TODAY_DATE.getWeekNumber()
   // Статистика.
-  const yearStatistic = workoutStore.getYearStatistic(year)
-  const monthStatistic = workoutStore.getMonthStatisticByMonth(year, month)
-  const weekStatistic = workoutStore.getWeekStatisticByWeekNumber(year, weekNumber)
+  const goalYear = goalStore.getGoalForYear(year)
+  const goalMonth = goalStore.getGoalForMonth(year, month)
+  const goalWeek = goalStore.getGoalForWeek(year, weekNumber)
   // Заголовки.
   const yearTitle = ref('')
   const monthTitle = ref('')
@@ -17,23 +17,23 @@
   const monthProgress = ref(0)
   const weekProgress = ref(0)
 
-  if (yearStatistic) {
-    yearTitle.value = `${yearStatistic.completedDistance} км / ${yearStatistic.goalDistance} км`
-    yearProgress.value = getPercent(yearStatistic.completedDistance, yearStatistic.goalDistance, 0)
+  if (goalYear) {
+    yearTitle.value = `${goalYear.completedDistance} км / ${goalYear.goalDistance} км`
+    yearProgress.value = getPercent(goalYear.completedDistance, goalYear.goalDistance, 0)
   } else {
-    console.error('Не получены данные о годовой статистике.')
+    console.error('Не получены данные о цели на год.')
   }
-  if (monthStatistic) {
-    monthTitle.value = `${monthStatistic.completedDistance} км / ${monthStatistic.goalDistance} км`
-    monthProgress.value = getPercent(monthStatistic.completedDistance, monthStatistic.goalDistance, 0)
+  if (goalMonth) {
+    monthTitle.value = `${goalMonth.completedDistance} км / ${goalMonth.goalDistance} км`
+    monthProgress.value = getPercent(goalMonth.completedDistance, goalMonth.goalDistance, 0)
   } else {
-    console.error('Не получены данные о статистике за месяц.')
+    console.error('Не получены данные о цели на месяц.')
   }
-  if (weekStatistic) {
-    weekTitle.value = `${weekStatistic.completedDistance} км / ${weekStatistic.goalDistance} км`
-    weekProgress.value = getPercent(weekStatistic.completedDistance, weekStatistic.goalDistance, 0)
+  if (goalWeek) {
+    weekTitle.value = `${goalWeek.completedDistance} км / ${goalWeek.goalDistance} км`
+    weekProgress.value = getPercent(goalWeek.completedDistance, goalWeek.goalDistance, 0)
   } else {
-    console.error('Не получены данные о статистике за неделю.')
+    console.error('Не получены данные о цели на неделю.')
   }
 </script>
 

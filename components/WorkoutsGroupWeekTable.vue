@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import type { WeekData } from '@/types/weekData'
+import type { GoalWeek } from '@/types/goalWeek'
 
 const { rows } = defineProps<{
-  rows: WeekData[],
+  rows: GoalWeek[],
 }>()
 </script>
 

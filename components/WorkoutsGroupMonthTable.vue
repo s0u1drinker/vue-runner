@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import type { MonthData } from '@/types/monthData'
+import type { GoalMonth } from '@/types/goalMonth'
 
 const { rows } = defineProps<{
-  rows: MonthData[],
+  rows: GoalMonth[],
 }>()
 </script>
 

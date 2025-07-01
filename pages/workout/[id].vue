@@ -1,22 +1,23 @@
 <script setup lang="ts">
 import type { Workout } from '@/types/workout'
 import type { Indicator } from '@/types/indicator'
-import TheGraph from '~/components/TheGraph.vue'
 
 const route = useRoute()
 const workoutStore = useWorkoutStore()
+const activityStore = useActivityStore()
+const weatherStore = useWeatherStore()
 // Идентификатор тренировки.
 const idWorkout = route.params.id as string
 // Данные о тренировке.
 const workout = workoutStore.getWorkoutByID(idWorkout) as Workout
 // Данные об активности, указанной в тренировке.
-const activity = workoutStore.getActivityByID(workout.idActivity)
+const activity = activityStore.getActivityByID(workout.idActivity)
 // Данные о погоде, указанной в тренировке
-const weather = workoutStore.getWeatherInfoByID(workout.idWeather)
+const weather = weatherStore.getWeatherInfoByID(workout.idWeather)
 // Список индикаторов.
 const workoutIndicators: Array<Indicator> = [
   {
-    icon: (activity.icon && workoutStore.isValidActivityIcon(activity.icon)) ? activity.icon : '',
+    icon: (activity.icon && activityStore.isValidActivityIcon(activity.icon)) ? activity.icon : '',
     title: activity.title,
     indicator: prettyDistance(workout.distance),
   },
