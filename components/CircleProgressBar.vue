@@ -1,4 +1,7 @@
 <script setup lang="ts">
+
+// FIXME: Проблема с кешированием компонента: при переходе на другую страницу и обратно, нет анимации заполнения.
+
 const { title = '', progress = 0 } = defineProps<{
   title?: string,
   progress: number,
@@ -16,7 +19,10 @@ const flagYellow = ref(false)
 // Смещение обводки. Если 0 - круг заполнен.
 const progressOffset = ref(circumference)
 
+const loadingData = ref(true)
+
 onMounted(() => {
+  loadingData.value = false
   // Установка цвета и смещения.
   if (progress >= 100) {
     flagGreen.value = true
@@ -55,7 +61,10 @@ onMounted(() => {
           :stroke-dasharray="circumference"
         ></circle>
       </svg>
-      <AnimatedCounter class="c-prog-bar__counter" :start="0" :end="progress" :duration="2000" measure="%" />
+      <div class="c-prog-bar__counter">
+        <ThePreloader v-if="loadingData" />
+        <AnimatedCounter :start="0" :end="progress" :duration="2000" measure="%" v-else />
+      </div>
     </div>
   </div>
 </template>
