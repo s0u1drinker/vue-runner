@@ -43,6 +43,16 @@
     }
   }
 
+  &_gray {
+    background-color: var(--light-gray);
+    border-color: var(--light-gray);
+
+    &:hover {
+      background-color: var(--dark-gray);
+      border-color: var(--dark-gray);
+    }
+  }
+
   &_outline {
 
     &_blue {

@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { storeToRefs } from 'pinia'
-
 const appStore = useAppStore()
 const { isLoadingData, error } = storeToRefs(appStore)
 </script>
