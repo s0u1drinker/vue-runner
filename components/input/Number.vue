@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const { step = 1, float = 0, min = 0, max = Infinity } = defineProps<{
+const { step = 1, float = 0, min = -Infinity, max = Infinity } = defineProps<{
   /**
    * Шаг прибавления/вычитания.
    */
@@ -21,9 +21,9 @@ const inputNumber = defineModel<number | string>({ default: 0})
 // Значение "по умолчанию".
 const defaultValue = inputNumber.value
 // Регулярное выражение для проверки вносимых пользователем символов при работе с дробными числами.
-const regExpFloat = /^[0-9.,]$/
+const regExpFloat = /^[0-9.,\-]$/
 // Регулярное выражение для проверки вносимых пользователем символов при работе с целыми числами.
-const regExpNoFloat = /^[0-9]$/
+const regExpNoFloat = /^[0-9\-]$/
 // Тип экранной клавиатуры.
 const inputMode = computed(() => float ? 'decimal' : 'numeric')
 // Уменьшение значения.
@@ -50,16 +50,18 @@ const incrementValue = () => {
 }
 // Проверка вносимых пользователем данных.
 const checkOnKeyDown = (e: KeyboardEvent) => {
-  // Разрешенные клавиши управления.
-  const controlKeys = [ 'Backspace', 'Delete', 'ArrowLeft', 'ArrowRight' ]
-
-  if (!controlKeys.includes(e.key)) {
+  // Проверка нажатой клавиши. Если нажатая клавиша не входит в список разрешённых.
+  if (!CONTROL_KEYS_INPUT_NUMBER.includes(e.key)) {
     // Проверка для целых чисел.
     if (!float && !regExpNoFloat.test(e.key)) e.preventDefault()
     // Проверка для дробных чисел.
     if (float && !regExpFloat.test(e.key)) e.preventDefault()
+    // Запрет на добавление отрицательных чисел, если минимальное значение больше или равно 0.
+    if ((min >= 0) && (e.key === '-')) e.preventDefault()
     // Запрет на добавление символов "." и ",", если в строке уже присутствует символ ".".
     if (float && (e.key === ',' || e.key === '.') && String(inputNumber.value).includes('.')) e.preventDefault()
+    // Запрет на добавление символа "-", если он уже присутствует в строке.
+    if ((min < 0) && (e.key === '-') && String(inputNumber.value).includes('-')) e.preventDefault()
   }
 }
 // Проверка при изменении данных.

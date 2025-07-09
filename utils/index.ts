@@ -72,6 +72,27 @@ export function prettyLapDistance(lapDistance: number): string {
   return (lapDistance >= 1000) ? `${lapDistance / 1000} км` : `${lapDistance} м`
 }
 /**
+ * Возвращает красивое значение числа (если число < 10) для даты или времени.
+ * @param value Значение.
+ * @returns Строка вида "01", "02" и т.д.
+ */
+export function prettyNumberForDateAndTime(value: number | string): string {
+  switch (typeof value) {
+    case 'string':
+      if (value.length < 2) value = value.padStart(2, '0')
+      break
+    case 'number':
+      if (value < 10) value = String(value).padStart(2, '0')
+      break
+    default:
+      console.error(`Неверный тип переменной: ${typeof value}. Ожидалась строка или число. Возвращаю значение "00".`)
+      value = '00'
+      break;
+  }
+
+  return value as string
+}
+/**
  * Индикатор потери веса (разность + процент).
  * @param weightBefore Вес до тренировки.
  * @param weightAfter Вес после тренировки.

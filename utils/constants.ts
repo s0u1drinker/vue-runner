@@ -7,6 +7,10 @@ export const DAYS_OF_WEEK: string[] = [ 'Понедельник', 'Вторни�
  */
 export const MONTHS: string[] = [ '', 'Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь' ]
 /**
+ * Разрешенные клавиши управления для элементов <input>, в которые можно вносить только числа.
+ */
+export const CONTROL_KEYS_INPUT_NUMBER: string[] = [ 'Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab' ]
+/**
  * Опции для Intl.DateTimeFormat.
  */
 export const DATE_TIME_FORMAT_OPTIONS: Intl.DateTimeFormatOptions = {

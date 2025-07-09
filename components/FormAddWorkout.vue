@@ -18,7 +18,7 @@ const distance = ref(0)
     </div>
     <div class="form-add__item">
       <div class="form-add__item-title">Дистанция (км):</div>
-      <InputNumber :float="2" v-model="distance" />
+      <InputNumber :float="2" :min="0" v-model="distance" />
     </div>
     <div class="form-add__item">
       <div class="form-add__item-title">Время:</div>
