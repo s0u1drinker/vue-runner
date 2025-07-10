@@ -5,13 +5,13 @@ const formData = reactive<Workout>({
 
 })
 */
-
+const time = ref('')
 const distance = ref(0)
 </script>
 
 <template>
   <form class="form-add">
-    <p class="color_red">The form is still under construction. Sorry.</p>
+    <p class="form-add__temp-message">The form is still under construction. Sorry.</p>
     <div class="form-add__item">
       <div class="form-add__item-title">Дата:</div>
       <TheDatepicker />
@@ -22,7 +22,7 @@ const distance = ref(0)
     </div>
     <div class="form-add__item">
       <div class="form-add__item-title">Время:</div>
-      <InputTime />
+      <InputTime v-model:time="time" />
     </div>
   </form>
 </template>
@@ -30,6 +30,11 @@ const distance = ref(0)
 <style scoped>
 .form-add {
   margin-top: var(--indent-double);
+
+  &__temp-message {
+    color: var(--red);
+    margin-bottom: var(--indent-double);
+  }
 
   &__item {
     display: flex;

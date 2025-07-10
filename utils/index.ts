@@ -77,20 +77,20 @@ export function prettyLapDistance(lapDistance: number): string {
  * @returns Строка вида "01", "02" и т.д.
  */
 export function prettyNumberForDateAndTime(value: number | string): string {
-  switch (typeof value) {
-    case 'string':
-      if (value.length < 2) value = value.padStart(2, '0')
-      break
-    case 'number':
-      if (value < 10) value = String(value).padStart(2, '0')
-      break
-    default:
-      console.error(`Неверный тип переменной: ${typeof value}. Ожидалась строка или число. Возвращаю значение "00".`)
-      value = '00'
-      break;
+  // Если тип переменной не строка и не число.
+  if (!['string', 'number'].includes(typeof value)) {
+    // Ругаемся в консоль.
+    console.error(`Неверный тип переменной: ${typeof value}. Ожидалась строка или число. Возвращаю значение "00".`)
+    // И присваиваем нули.
+    value = '00'
+  } else {
+    // Если нет, то переводим число в строку.
+    if (typeof value === 'number') value = String(value)
+    // И если в строке менее 2-х символов - дополняем нулями в начале.
+    if (value.length < 2) value = value.padStart(2, '0')
   }
 
-  return value as string
+  return value
 }
 /**
  * Индикатор потери веса (разность + процент).

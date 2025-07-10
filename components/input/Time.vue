@@ -1,15 +1,39 @@
 <script setup lang="ts">
-
-// TODO: Input`ы вынести в отдельный компонент.
-
 const { showSeconds = true } = defineProps<{
   showSeconds?: boolean
 }>()
 
-const inputTime = reactive({
-  hours: '00',
-  minutes: '00',
-  seconds: '00',
+const time = defineModel('time', {
+  type: String,
+  default: '00:00:00'
+})
+
+const emit = defineEmits(['update:time'])
+// Часы.
+const hours = ref('00')
+// Минуты.
+const minutes = ref('00')
+// Секунды.
+const seconds = ref('00')
+// Собираем время.
+const computedTime = computed(() => {
+  return `${hours.value}:${minutes.value}${showSeconds ? `:${seconds.value}` : ''}`
+})
+// Обновляем модель при изменении времени.
+watch(computedTime, () => {
+  emit('update:time', computedTime.value)
+})
+
+onMounted(() => {
+  // Разбиваем время по символу ":".
+  const splitTime = time.value.split(':')
+  // Если массив состоит из 2-х или 3-х элементов,
+  if ([2, 3].includes(splitTime.length)) {
+    // присваиваем значения соответствующим переменным.
+    hours.value = splitTime[0]
+    minutes.value = splitTime[1]
+    if (showSeconds) seconds.value = splitTime[2]
+  }
 })
 </script>
 
@@ -18,18 +42,18 @@ const inputTime = reactive({
     <InputTimeInput
       class="input i-time__input"
       :max="23"
-      v-model="inputTime.hours"
+      v-model="hours"
     />
     <span class="i-time__colon">:</span>
     <InputTimeInput
       class="input i-time__input"
-      v-model="inputTime.minutes"
+      v-model="minutes"
     />
     <template v-if="showSeconds">
       <span class="i-time__colon">:</span>
       <InputTimeInput
       class="input i-time__input"
-      v-model="inputTime.seconds"
+      v-model="seconds"
     />
     </template>
   </div>

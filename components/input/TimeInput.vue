@@ -1,4 +1,5 @@
 <script setup lang="ts">
+// TODO: проблема с вводом символов на touchpad (onkeydown).
 const { min = 0, max = 59, placeholder = '--' } = defineProps<{
   min?: number,
   max?: number,
@@ -12,16 +13,20 @@ function onFocus(e: FocusEvent) {
   // Выделяем текст.
   (e.target as HTMLInputElement).select()
 }
-// Действие при нажатии на клавишу.
-function onKeyDown(e: KeyboardEvent) {
-  // Проверка нажатой клавиши. Если нажатая клавиша не входит в список разрешённых.
-  if (!CONTROL_KEYS_INPUT_NUMBER.includes(e.key)) {
-    // Запрет на добавление любых символов, кроме чисел от 0 до 9.
-    if (!/^[0-9]$/.test(e.key)) e.preventDefault()
-  }
-}
 // Действие при вводе данных.
 function onInput(e: InputEvent) {
+  if (e.data && !/^[0-9]$/.test(e.data)) {
+    inputValue.value = inputValue.value.replace(/[^0-9]/g, '')
+  } else if (inputValue.value.length === 2) checkMinMax()
+}
+// Действие при потере фокуса.
+function onBlur() {
+  // Если количество знаков меньше 2, то записываем нули в начало строки.
+  if (inputValue.value.length < 2) inputValue.value = prettyNumberForDateAndTime(inputValue.value)
+  checkMinMax()
+}
+// Проверка на минимальное и максимальное значения.
+function checkMinMax() {
   const currentValue = Number(inputValue.value)
   // Проверяем текущее значение на NaN.
   if (!isNaN(currentValue)) {
@@ -36,11 +41,6 @@ function onInput(e: InputEvent) {
     inputValue.value = defaultValue
   }
 }
-// Действие при потере фокуса.
-function onBlur() {
-  // Если количество знаков меньше 2, то записываем нули в начало строки.
-  if (inputValue.value.length < 2) inputValue.value = prettyNumberForDateAndTime(inputValue.value)
-}
 </script>
 
 <template>
@@ -52,7 +52,6 @@ function onBlur() {
     :max
     :placeholder
     @focus.native="onFocus"
-    @keydown="onKeyDown"
     @input="onInput($event as InputEvent)"
     @blur="onBlur"
     @paste.prevent

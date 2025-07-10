@@ -1,4 +1,5 @@
 <script setup lang="ts">
+// TODO: проблема с вводом символов на touchpad (onkeydown).
 const { step = 1, float = 0, min = -Infinity, max = Infinity } = defineProps<{
   /**
    * Шаг прибавления/вычитания.
