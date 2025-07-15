@@ -1,5 +1,4 @@
 <script setup lang="ts">
-// TODO: проблема с вводом символов на touchpad (onkeydown).
 const { step = 1, float = 0, min = -Infinity, max = Infinity } = defineProps<{
   /**
    * Шаг прибавления/вычитания.
@@ -18,13 +17,10 @@ const { step = 1, float = 0, min = -Infinity, max = Infinity } = defineProps<{
    */
   max?: number,
 }>()
+
 const inputNumber = defineModel<number | string>({ default: 0})
 // Значение "по умолчанию".
 const defaultValue = inputNumber.value
-// Регулярное выражение для проверки вносимых пользователем символов при работе с дробными числами.
-const regExpFloat = /^[0-9.,\-]$/
-// Регулярное выражение для проверки вносимых пользователем символов при работе с целыми числами.
-const regExpNoFloat = /^[0-9\-]$/
 // Тип экранной клавиатуры.
 const inputMode = computed(() => float ? 'decimal' : 'numeric')
 // Уменьшение значения.
@@ -43,34 +39,56 @@ const incrementValue = () => {
   // Конвертируем в число.
   const numberInputValue = Number(inputNumber.value)
   // Следующее значение = Текущее значение + шаг.
-  const nextValue = numberInputValue + step
+  const nextValue = Number((numberInputValue + step).toFixed(float))
   // Если следующее значение больше максимального - отображаем максимальное.
   if (nextValue > max) inputNumber.value = max
   // Если текущее значение меньше максимального - отображаем следующее значение.
   else if (numberInputValue < max) inputNumber.value = nextValue
 }
-// Проверка вносимых пользователем данных.
-const checkOnKeyDown = (e: KeyboardEvent) => {
-  // Проверка нажатой клавиши. Если нажатая клавиша не входит в список разрешённых.
-  if (!CONTROL_KEYS_INPUT_NUMBER.includes(e.key)) {
-    // Проверка для целых чисел.
-    if (!float && !regExpNoFloat.test(e.key)) e.preventDefault()
-    // Проверка для дробных чисел.
-    if (float && !regExpFloat.test(e.key)) e.preventDefault()
-    // Запрет на добавление отрицательных чисел, если минимальное значение больше или равно 0.
-    if ((min >= 0) && (e.key === '-')) e.preventDefault()
-    // Запрет на добавление символов "." и ",", если в строке уже присутствует символ ".".
-    if (float && (e.key === ',' || e.key === '.') && String(inputNumber.value).includes('.')) e.preventDefault()
-    // Запрет на добавление символа "-", если он уже присутствует в строке.
-    if ((min < 0) && (e.key === '-') && String(inputNumber.value).includes('-')) e.preventDefault()
-  }
-}
 // Проверка при изменении данных.
 const checkOnInput = (e: InputEvent) => {
-  // Замена "," на ".".
-  if (e.data === ',') inputNumber.value = String(inputNumber.value).replace(',', '.')
-  // Если пользователь ввёл число, а в строке первый элемент 0, то убираем этот 0 путём конвертации в число.
-  if (e.data && String(inputNumber.value)[0] === '0' && regExpNoFloat.test(e.data)) inputNumber.value = Number(inputNumber.value)
+  if (e.data) {
+    let stringInputNumber = String(inputNumber.value)
+    // Строка начинается с "0".
+    if (stringInputNumber.startsWith('0') && (stringInputNumber.length === 2)) {
+      // Если следом идёт число, то убираем "0".
+      if (/^[0-9]$/.test(e.data)) { stringInputNumber = stringInputNumber.slice(1) }
+    }
+    // Проверяем число.
+    if (!float) {
+      // Целое число.
+      if (!/^[0-9\-]$/.test(e.data)) { stringInputNumber = stringInputNumber.replace(/[^0-9\-]/g, '') }
+    } else {
+      // Десятичная дробь.
+      if (!/^[0-9.,\-]$/.test(e.data)) { stringInputNumber = stringInputNumber.replace(/[^0-9.,\-]/g, '') }
+      // Работа с "," и ".".
+      if (e.data === ',' || e.data === '.') {
+        // Замена "," на ".".
+        if (e.data === ',') { stringInputNumber = stringInputNumber.replace(',', '.'); }
+        // Если строка состоит из одного символа ".", то дописываем в начало строки "0".
+        if (stringInputNumber.length === 1) { stringInputNumber = stringInputNumber.padStart(2, '0') }
+        // Если первый символ строки "-" и строка состоит из 2-х символов ("-."), то "." следует удалить. 
+        if ((stringInputNumber[0] === '-') && (stringInputNumber.length === 2)) { stringInputNumber = stringInputNumber.slice(0, -1) }
+        // Если в строке уже есть символ ".", то удаляем текущий символ ".".
+        if ((stringInputNumber.split('.').length - 1) > 1) { stringInputNumber = stringInputNumber.slice(0, -1) }
+      }
+    }
+    // Проверяем знак "-".
+    if (e.data === '-') {
+      // Запрет на добавление отрицательных чисел, если минимальное значение больше или равно 0.
+      if (min >= 0) { stringInputNumber = stringInputNumber.replace('-', '') }
+      else {
+        // Если строка вида "0-", то убираем "0" в начале.
+        if ((stringInputNumber.length === 2) && stringInputNumber.startsWith('0')) { stringInputNumber = stringInputNumber.slice(1) }
+        // Запрет на добавление символа "-", если он уже присутствует в строке.
+        if ((stringInputNumber.split('-').length - 1) > 1) { stringInputNumber = stringInputNumber.slice(0, -1) }
+        // Запрет добавления "-", если он не находится в начале строки.
+        if (stringInputNumber.length > 1) { stringInputNumber = stringInputNumber.slice(0, -1) }
+      }
+    }
+    // Если после проверок строка стала пустой - записываем "0"
+    inputNumber.value = stringInputNumber || '0'
+  }
 }
 // Проверка при потере фокуса.
 const checkOnBlur = () => {
@@ -90,7 +108,6 @@ const checkOnBlur = () => {
       type="text"
       class="i-number__input input"
       :inputmode="inputMode"
-      @keydown="checkOnKeyDown($event as KeyboardEvent)"
       @input="checkOnInput($event as InputEvent)"
       @blur="checkOnBlur"
       @paste.prevent

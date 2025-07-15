@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Workout } from '@/types/workout'
+import DateTimePicker from './DateTimePicker.vue';
 /*
 const formData = reactive<Workout>({
 
@@ -13,8 +14,8 @@ const distance = ref(0)
   <form class="form-add">
     <p class="form-add__temp-message">The form is still under construction. Sorry.</p>
     <div class="form-add__item">
-      <div class="form-add__item-title">Дата:</div>
-      <TheDatepicker />
+      <div class="form-add__item-title">Начало:</div>
+      <DateTimePicker />
     </div>
     <div class="form-add__item">
       <div class="form-add__item-title">Дистанция (км):</div>
