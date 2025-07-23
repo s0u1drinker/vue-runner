@@ -238,3 +238,12 @@ export function getListOfWeeksForMonthToSelect(year: number | string, month: num
     return []
   }
 }
+
+/**
+ * Проверяет строку на соответствие шаблону ДД.ММ.ГГГГ.
+ * @param dateString Строка, предположитльно, в формате ДД.ММ.ГГГГ.
+ * @returns Результат проверки на соответствие шаблону.
+ */
+export function isValidDateString(dateString: string) {
+  return (typeof dateString === 'string') ? /^[0-9][0-9]\.[0|1][0-9]\.20[0-9][0-9]$/.test(dateString) : false
+}

@@ -7,7 +7,22 @@ export const TODAY_DATE = {
   DATE: new Date(),
   getFullYear() { return this.DATE.getFullYear() },
   getMonth() { return this.DATE.getMonth() + 1 },
+  /**
+   * @returns Номер недели.
+   */
   getWeekNumber() { return this.DATE.getWeekNumber() },
+  /**
+   * @returns День месяца.
+   */
+  getDay() { return this.DATE.getDate() },
+  /**
+   * @returns Текстовый формат даты вида ДД.ММ.ГГГГ.
+   */
+  getDateString() { return this.DATE.toLocaleDateString() },
+  /**
+   * @returns Текстовый формат времени вида ЧЧ:ММ:СС
+   */
+  getTimeString() { return this.DATE.toLocaleTimeString() }
 }
 /**
  * Список для выпадающего меню <Год>.

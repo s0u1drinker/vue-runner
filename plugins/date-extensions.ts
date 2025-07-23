@@ -1,6 +1,7 @@
 declare global {
   interface Date {
     getWeekNumber(): number,
+    toLocaleISOString(): string,
   }
 }
 
@@ -22,5 +23,27 @@ export default defineNuxtPlugin(() => {
     const weekNumber = Math.ceil((dayOfYear + startOfYear.getDay() + 1) / 7)
     // Корректируем номер недели, если неделя начинается с понедельника.
     return (this.getDay() === 0) ? weekNumber - 1 : weekNumber
+  },
+  /**
+   * Возвращает дату в формате ISO 8601 с корректировкой по локальному часовому поясу: yyyy-mm-ddThh:mm:ss+offset
+   */
+  Date.prototype.toLocaleISOString = function(): string {
+    // Смещение текущего часового пояса в минутах.
+    const timezoneOffset = this.getTimezoneOffset()
+    // Смещение в текстовом виде.
+    let localeOffset = '+0000'
+
+    if (timezoneOffset !== 0) {
+      // Определяем знак.
+      const sign = (timezoneOffset < 0) ? '+' : '-'
+      // Вычисляем количество часов.
+      const hours = String(Math.trunc(Math.abs(timezoneOffset) / 60)).padStart(2, '0')
+      // Вычисляем количество минут.
+      const minutes = String(Math.abs(timezoneOffset) % 60).padEnd(2, '0')
+      // Собираем.
+      localeOffset = `${sign}${hours}${minutes}`
+    }
+
+    return `${this.toLocaleDateString().split('.').reverse().join('-')}T${this.toLocaleTimeString()}${localeOffset}`
   }
 })
