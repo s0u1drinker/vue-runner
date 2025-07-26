@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import type { SelectOptions } from '@/types/selectOptions'
+import type { SelectNativeOptions } from '~/types/selectNativeOptions'
 
 // Значение Placeholder по умолчанию.
 // Также отображается в aria-label, если в placeholder "пришла" пустая строка.
 const defaultPlaceholder = 'Выберите элемент...'
 
 const { options, name, placeholder = defaultPlaceholder } = defineProps<{
-  options: SelectOptions[],
+  options: SelectNativeOptions[],
   name: string,
   placeholder?: string
 }>()
@@ -17,7 +17,7 @@ const selectValue = defineModel()
 
 <template>
   <select
-    class="select"
+    class="n-select"
     v-model="selectValue"
     :aria-label="placeholder || defaultPlaceholder"
     :name
@@ -32,7 +32,7 @@ const selectValue = defineModel()
 </template>
 
 <style scoped>
-.select {
+.n-select {
   padding: var(--indent-quarter) var(--indent-half);
   border: var(--border);
   border-radius: var(--indent-quarter);

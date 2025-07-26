@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { getDataFromDB } from './utils/dataFromDB'
 import type { Activity } from '@/types/activity'
+import type { SelectCustomOptions } from '@/types/selectCustomOptions'
 
 export const useActivityStore = defineStore('activity', {
   state: () => ({
@@ -57,6 +58,14 @@ export const useActivityStore = defineStore('activity', {
         return state.activities.some((activity) => activity.icon === iconName)
       }
     },
+    /**
+     * @returns Список активностей для использования в компоненте <CustomSelect>.
+     */
+    getActivitiesForSelect(state): SelectCustomOptions[] {
+      return state.activities.map((activity) => {
+        return { value: activity.id, label: activity.title, icon: activity.icon }
+      })
+    }
   },
   actions: {
     /**

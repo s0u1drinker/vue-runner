@@ -1,15 +1,16 @@
 <script setup lang="ts">
 import type { Workout } from '@/types/workout'
-import DateTimePicker from './DateTimePicker.vue';
-/*
-const formData = reactive<Workout>({
 
-})
-*/
+const activityList = storeToRefs(useActivityStore()).getActivitiesForSelect
+const weatherList = storeToRefs(useWeatherStore()).weather
+
+// const formData = reactive<Workout>({
 const formData = reactive({
   trainingTime: '',
   distance: 0,
-  dateStart: ''
+  dateStart: '',
+  idActivity: '',
+  idWeather: '',
 })
 // Синхронизируем дату между клиентом и сервером.
 const today = useState('today', () => new Date())
@@ -20,8 +21,12 @@ const today = useState('today', () => new Date())
     <p class="form-add__temp-message">The form is still under construction. Sorry.</p>
     <div class="form-add__item">
       <div class="form-add__item-title">Активность:</div>
+      <SelectCustom
+        :list="activityList"
+        v-model="formData.idActivity"
+      />
+      {{ formData.idActivity }}
     </div>
-
     <div class="form-add__item">
       <div class="form-add__item-title">Начало:</div>
       <DateTimePicker

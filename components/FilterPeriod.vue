@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { RadioGroupValues } from '@/types/radioGroupValues'
-import type { SelectOptions } from '@/types/selectOptions'
+import type { SelectNativeOptions } from '~/types/selectNativeOptions'
 import type { FilterPeriod } from '@/types/filterPeriod'
 
 // FIXME: Необходимо ещё раз продумать оформление компоннета.
@@ -19,7 +19,7 @@ const showOptions = ref<boolean>(false)
 // Значение выбранного периода.
 const period = ref<string | null>(null)
 // Список недель.
-const listOfWeeks = ref<SelectOptions[]>([])
+const listOfWeeks = ref<SelectNativeOptions[]>([])
 // Выбранный год.
 const targetYear = ref<string>(String(TODAY_DATE.getFullYear()))
 // Выбранный месяц.
@@ -61,7 +61,7 @@ watchEffect(() => {
 watch(filterBy, () => {
   emit('setFilter', filterBy.value)
 })
-// При выборе периода показывает блок с CustomSelect, иначе сбрасывает фильтр.
+// При выборе периода показывает блок с <SelectNative>, иначе сбрасывает фильтр.
 function toggleOptions(): void {
   showOptions.value = !showOptions.value
   
@@ -91,20 +91,20 @@ function toggleOptions(): void {
         v-model="period"
       />
       <div class="f-period__values" v-if="period">
-        <CustomSelect
+        <SelectNative
           :options="YEARS_FOR_SELECT"
           placeholder=""
           name="years"
           v-model="targetYear"
         />
-        <CustomSelect
+        <SelectNative
           :options="MONTHS_FOR_SELECT"
           placeholder=""
           name="months"
           v-model="targetMonth"
           v-if="period === 'month' || period === 'week'"
         />
-        <CustomSelect
+        <SelectNative
           :options="listOfWeeks"
           placeholder=""
           name="weeks"

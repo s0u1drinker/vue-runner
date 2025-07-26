@@ -7,7 +7,7 @@ const { title, message } = defineProps<{
 
 <template>
   <form class="form">
-    <div class="form__header" v-if="$slots.title">
+    <div class="form__header" v-if="title">
       <h1 class="form__title">{{ title }}</h1>
     </div>
     <div class="form__body" v-if="$slots.body">

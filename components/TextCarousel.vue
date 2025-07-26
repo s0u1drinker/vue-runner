@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import type { SelectOptions } from '@/types/selectOptions'
+import type { SelectNativeOptions } from '~/types/selectNativeOptions'
 
 const { items } = defineProps<{
-  items: SelectOptions[]
+  items: SelectNativeOptions[]
 }>()
 
 const size = '1rem'

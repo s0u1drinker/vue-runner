@@ -1,5 +1,5 @@
 import type { DateFormat } from "@/types/dateFormat"
-import type { SelectOptions } from "@/types/selectOptions"
+import type { SelectNativeOptions } from "~/types/selectNativeOptions"
 
 /**
  * Возвращает температуру со знаками +/- и °.
@@ -195,12 +195,12 @@ export function getAverage(all: number | number[], count: number, precision: 0 |
 }
 
 /**
- * Возвращает список недель для элемента <CustomSelect> за указанный период.
+ * Возвращает список недель для элемента <SelectNative> за указанный период.
  * @param year Год.
  * @param month Месяц.
  * @returns Список недель.
  */
-export function getListOfWeeksForMonthToSelect(year: number | string, month: number | string): SelectOptions[] {
+export function getListOfWeeksForMonthToSelect(year: number | string, month: number | string): SelectNativeOptions[] {
   // Если пришли строки - переводим их в числа.
   if (typeof year === 'string') year = +year
   if (typeof month === 'string') month = +month
@@ -209,7 +209,7 @@ export function getListOfWeeksForMonthToSelect(year: number | string, month: num
     // Первый день месяца.
     const date = new Date(year, month - 1, 1)
     // Набор для хранения информации о неделях.
-    const uniqueWeekNumbers = new Map<number, SelectOptions>()
+    const uniqueWeekNumbers = new Map<number, SelectNativeOptions>()
     // Теперь перебираем все дни месяца.
     while (date.getMonth() === (month - 1)) {
       // Номер недели.

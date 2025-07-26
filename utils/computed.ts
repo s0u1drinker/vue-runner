@@ -1,4 +1,4 @@
-import type { SelectOptions } from "@/types/selectOptions"
+import type { SelectNativeOptions } from "~/types/selectNativeOptions"
 
 /**
  * Данные о текущем дне.
@@ -27,8 +27,8 @@ export const TODAY_DATE = {
 /**
  * Список для выпадающего меню <Год>.
  */
-export const YEARS_FOR_SELECT: SelectOptions[] = (() => {
-  const years: SelectOptions[] = []
+export const YEARS_FOR_SELECT: SelectNativeOptions[] = (() => {
+  const years: SelectNativeOptions[] = []
   const currentYear = new Date().getFullYear()
 
   for (let i = 2023; i <= currentYear; i++) {
@@ -40,6 +40,6 @@ export const YEARS_FOR_SELECT: SelectOptions[] = (() => {
 /**
  * Список для выпадающего меню <Месяц>.
  */
-export const MONTHS_FOR_SELECT: SelectOptions[] = MONTHS.map((month, index): SelectOptions => {
+export const MONTHS_FOR_SELECT: SelectNativeOptions[] = MONTHS.map((month, index): SelectNativeOptions => {
   return { value: `${index}`, label: month }
 }).slice(1)
