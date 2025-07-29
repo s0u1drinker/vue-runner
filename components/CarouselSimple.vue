@@ -1,9 +1,6 @@
 <script setup lang="ts">
 import type { SelectCustomOptions } from '@/types/selectCustomOptions'
 
-// TODO: Добавить Throttle-функцию на кнопки.
-// FIXME: Унифицировать функцию переключения слайдов.
-
 const { items } = defineProps<{
   items: SelectCustomOptions[]
 }>()
@@ -22,19 +19,43 @@ const showPreloader = ref<boolean>(true)
 // Массив HTML-элементов карусели для рабботы со стилями этих элементов.
 const carouselItems = useTemplateRef<HTMLDivElement[]>('carouselItems')
 // Список элементов карусели с дублированием первого и последнего.
-const itemsWithDuplication = computed(() => {
+const itemsWithDuplication = computed<SelectCustomOptions[]>((): SelectCustomOptions[] => {
   // Если количество переданных в props элементов не менее 2-х, то дуюлирование элементов не производится. 
   return (items.length > 1) ? [ items[items.length - 1], ...items, items[0] ] : items
 })
 // Вычисление сдвига элемента <.carousel-s__track> в зависимости от текущего элемента.
-const trackTranslate = computed(() => {
+const trackTranslate = computed<string>((): string => {
   // Если количество переданных в props элементов не менее 2-х, то сдвигать ничего не нужно. 
   return (items.length > 1) ? `translateX(${-currentItem.value * 100}%)` : 'none'
 })
 // Флаг состояния <disabled> для кнопок.
-const disabledButtonsFlag = computed(() => {
+const disabledButtonsFlag = computed<boolean>((): boolean => {
   // Кнопки необходимо отключить только в том случае, если количество переданных в props элементов не менее 2-х.
   return (items.length < 2)
+})
+// Предыдущий элемент с использованием throttle-функции.
+const throttledPrevItem = throttle(() => { currentItem.value-- }, 250)
+// Следующий элемент с использованием throttle-функции.
+const throttledNextItem = throttle(() => { currentItem.value++ }, 250)
+// Наболюдаем за изменением порядкового номера, чтобы сделать плавный переход между первым и последним элементами.
+watch(currentItem, () => {
+  // Вычисляем новое значение порядкового номера.
+  const newValue = (currentItem.value === 0) ? items.length : (currentItem.value === itemsWithDuplication.value.length - 1) ? 1 : -1
+  // Если новое значение является первым или последним, то начинаем творить "магию".
+  if (newValue !== -1) {
+    // Ждём, пока пройдет анимация перехода.
+    setTimeout(() => {
+      // Отключаем свойство <transition>, чтобы был "бесшовный" переход.
+      trackTransition.value = 'none'
+      // Присваиваем новое значение порядкового номера.
+      currentItem.value = newValue
+      // Небольшая "магия", чтобы избежать пролистывания всех элементов.
+      setTimeout(() => {
+        // Возвращаем свойство <transition> по умолчанию.
+        trackTransition.value = transition
+      }, 25);
+    }, 250);
+  }
 })
 
 onMounted(() => {
@@ -51,44 +72,24 @@ onMounted(() => {
     showPreloader.value = false
   } else console.error(`Непредвиденная ошибка: отсутствуют элементы в карусели (${carouselItems.value}).`)
 })
-// Переключение на предыдущий элемент карусели.
-function prevItem(): void {
-  // Уменьшаем порядковый номер.
-  currentItem.value--
-  // Если показан 1-й элемент массива (дубликат последнего элемента).
-  if (currentItem.value === 0) {
-    // Ждём, пока пройдет анимация перехода.
-    setTimeout(() => {
-      // Отключаем свойство <transition>, чтобы был "бесшовный" переход.
-      trackTransition.value = 'none'
-      // Порядковый номер текущего элемента = последнему "реальному" элементу.
-      currentItem.value = items.length
-      // Небольшая "магия", чтобы избежать пролистывания всех элементов.
-      setTimeout(() => {
-        // Возвращаем свойство <transition> по умолчанию.
-        trackTransition.value = transition
-      }, 25);
-    }, 250);
-  }
-}
-// Переключение на следующий элемент карусели.
-function nextItem(): void {
-  // Увеличиваем порядковый номер.
-  currentItem.value++
-  // Если показан последний элемент массива (дубликат первого элемента).
-  if (currentItem.value === itemsWithDuplication.value.length - 1) {
-    // Ждём, пока пройдет анимация перехода.
-    setTimeout(() => {
-      // Отключаем свойство <transition>, чтобы был "бесшовный" переход.
-      trackTransition.value = 'none'
-      // Порядковый номер текущего элемента = первому "реальному" элементу (0-й элемент - это дубликат).
-      currentItem.value = 1
-      // Небольшая "магия", чтобы избежать пролистывания всех элементов.
-      setTimeout(() => {
-        // Возвращаем свойство <transition> по умолчанию.
-        trackTransition.value = transition
-      }, 25);
-    }, 250);
+/**
+ * Ограничивает частоту вызова переданной функции. Используется, главынм образом, на кнопках переключения.
+ * @param func Функция.
+ * @param timeout Задержка в миллисекундах.
+ */
+function throttle<T extends (...args: any) => any>(func: T, timeout: number) {
+  // Флаг блокировки функции.
+  let isThrottled = false
+  // Функция-обёртка.
+  return function(this: ThisParameterType<T>, ...args: Parameters<T>) {
+    // Если функция заблокирована - выходим.
+    if (isThrottled) return
+    // Поднимаем флаг блокировки.
+    isThrottled = true
+    // Вызываем переданную функцию.
+    func.apply(this, args)
+    // Запускаем таймер, который опустит флаг блокировки через обозначенное выше время.
+    setTimeout(() => isThrottled = false, timeout)
   }
 }
 </script>
@@ -97,7 +98,7 @@ function nextItem(): void {
   <div class="carousel-s">
     <button
       class="button button_outline_gray"
-      @click="prevItem"
+      @click="throttledPrevItem"
       :disabled="disabledButtonsFlag"
     >
       <Icon name="material-symbols:chevron-left" />
@@ -129,7 +130,7 @@ function nextItem(): void {
     </div>
     <button
       class="button button_outline_gray"
-      @click="nextItem"
+      @click="throttledNextItem"
       :disabled="disabledButtonsFlag"
     >
       <Icon name="material-symbols:chevron-right"/>
