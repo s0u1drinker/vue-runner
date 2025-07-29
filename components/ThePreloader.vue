@@ -5,10 +5,15 @@ const { type = 'dots' } = defineProps<{
 </script>
 
 <template>
-  <div class="preloader preloader_dots" v-if="type === 'dots'">
-    <span class="preloader__dot preloader__dot_1">.</span>
-    <span class="preloader__dot preloader__dot_2">.</span>
-    <span class="preloader__dot preloader__dot_3">.</span>
+  <div
+    class="preloader"
+    :class="[ `preloader_${type}` ]"
+  >
+    <template v-if="type === 'dots'">
+      <span class="preloader__dot preloader__dot_1">.</span>
+      <span class="preloader__dot preloader__dot_2">.</span>
+      <span class="preloader__dot preloader__dot_3">.</span>
+    </template>
   </div>
 </template>
 
@@ -19,6 +24,12 @@ const { type = 'dots' } = defineProps<{
   50% { top: -1rem; }
   75% { top: -.5rem; }
   100% { top: 0; }
+}
+
+@keyframes blink {
+  0%   { opacity: 1; }
+  50%  { opacity: 0.25; }
+  100% { opacity: 1; }
 }
 
 .preloader {
@@ -39,6 +50,11 @@ const { type = 'dots' } = defineProps<{
     &_3 {
       animation: dot-bounce var(--animation-time) linear alternate infinite .5s;
     }
+  }
+
+  &_blink {
+    background-color: var(--dark-gray);
+    animation: blink 2s ease-out infinite;
   }
 }
 </style>

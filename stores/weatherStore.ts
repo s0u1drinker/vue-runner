@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { getDataFromDB } from './utils/dataFromDB'
 import type { Weather } from '@/types/weather'
+import type { SelectCustomOptions } from '@/types/selectCustomOptions'
 
 export const useWeatherStore = defineStore('weather', {
   state: () => ({
@@ -24,6 +25,14 @@ export const useWeatherStore = defineStore('weather', {
 
         return undefined
       }
+    },
+    /**
+     * @returns Список погодных явлений для использования в компоненте <CustomSelect>.
+     */
+    getActivitiesForSelect(state): SelectCustomOptions[] {
+      return state.weather.map((weather) => {
+        return { value: weather.id, label: weather.description, icon: weather.icon }
+      })
     },
   },
   actions: {

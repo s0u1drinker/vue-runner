@@ -2,7 +2,7 @@
 import type { Workout } from '@/types/workout'
 
 const activityList = storeToRefs(useActivityStore()).getActivitiesForSelect
-const weatherList = storeToRefs(useWeatherStore()).weather
+const weatherList = storeToRefs(useWeatherStore()).getActivitiesForSelect
 
 // const formData = reactive<Workout>({
 const formData = reactive({
@@ -61,6 +61,7 @@ const today = useState('today', () => new Date())
     </div>
     <div class="form-add__item">
       <div class="form-add__item-title">Погода:</div>
+      <CarouselSimple :items="weatherList" />
     </div>
     <div class="form-add__item">
       <div class="form-add__item-title">Каденс:</div>
