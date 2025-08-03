@@ -42,6 +42,37 @@ function selectDateTime(): void {
 function closeForm(): void {
   flagOpenForm.value = false
 }
+// Обработчик клика.
+function clickHandler(e: MouseEvent) {
+  // Элемент, на котором было зарегистрировано событие "Клик".
+  const target = e.target as HTMLElement
+  // Если элемент есть и его родителем не является текущий компонент.
+  if (target && !target.closest('.datetimepicker')) {
+    // Закрываем форму.
+    if (flagOpenForm.value) closeForm()
+  }
+}
+// Обработчик нажатия клавиш.
+function keyDownHandler(e: KeyboardEvent) {
+  switch (e.key) {
+    case 'Escape':
+      // Закрываем форму.
+      if (flagOpenForm.value) closeForm()
+      break
+    default:
+      break
+  }
+}
+// Вешаем обработчик нажатия клавиш.
+document?.body.addEventListener('keydown', keyDownHandler)
+// Вешаем обработчик клика.
+document?.body.addEventListener('click', clickHandler)
+
+onBeforeUnmount(() => {
+  // Чистим за собой: убираем обработчики.
+  document?.body.removeEventListener('keydown', keyDownHandler)
+  document?.body.removeEventListener('click', clickHandler)
+})
 </script>
 
 <template>
@@ -139,6 +170,7 @@ function closeForm(): void {
     left: 0;
     right: 0;
     background-color: var(--white);
+    z-index: 10;
   }
   
   &__time {

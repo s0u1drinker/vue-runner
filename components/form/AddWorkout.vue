@@ -14,18 +14,25 @@ const formData = reactive({
 })
 // Синхронизируем дату между клиентом и сервером.
 const today = useState('today', () => new Date())
+// Отправка формы.
+function sendForm() {
+  console.log('Send this form fast!')
+}
+// Очистка формы.
+function clearForm() {
+  console.log('Clear this form fast!')
+}
 </script>
 
 <template>
-  <form class="form-add" @submit.prevent>
-    <p class="form-add__temp-message">The form is still under construction. Sorry.</p>
+  <form class="form-add" @submit.prevent @keydown.enter.prevent>
+    <p class="form-add__temp-message">Извините, данная форма ещё в разработке.</p>
     <div class="form-add__item">
       <div class="form-add__item-title">Активность:</div>
       <SelectCustom
         :list="activityList"
         v-model="formData.idActivity"
       />
-      {{ formData.idActivity }}
     </div>
     <div class="form-add__item">
       <div class="form-add__item-title">Начало:</div>
@@ -78,6 +85,10 @@ const today = useState('today', () => new Date())
     <div class="form-add__item">
       <div class="form-add__item-title">Комментарий:</div>
     </div>
+    <div class="form-add__item form-add__buttons">
+      <button class="button button_outline_gray" @click="clearForm">Очистить</button>
+      <button type="submit" class="button button_blue" @click="sendForm">Сохранить</button>
+    </div>
   </form>
 </template>
 
@@ -113,6 +124,11 @@ const today = useState('today', () => new Date())
     @media (--viewport-sm) {
       width: 10rem;
     }
+  }
+
+  &__buttons {
+    display: flex;
+    gap: var(--indent);
   }
 }
 </style>
