@@ -1,9 +1,13 @@
 <script setup lang="ts">
 import type { SelectCustomOptions } from '@/types/selectCustomOptions'
 
+// FIXME: Переосмыслить логику расчёта нового значения порядкового номера.
+
 const { items } = defineProps<{
   items: SelectCustomOptions[]
 }>()
+
+const selectedItem = defineModel<string>()
 // Значение по умолчанию для свойства <transition> элемента <.carousel-s__track>
 const transition: string = 'transform .25s ease-out'
 // Ширина элемента <.carousel-s__container>.
@@ -55,10 +59,20 @@ watch(currentItem, () => {
         trackTransition.value = transition
       }, 25);
     }, 250);
+  } else {
+    // Отправляем родителю новое значение.
+    selectedItem.value = items[currentItem.value - 1].value
   }
 })
 
 onMounted(() => {
+  // Если есть значение по умолчанию.
+  if (selectedItem.value) {
+    // Определяем его порядковый номер.
+    const selectedIndex = items.findIndex((item) => item.value === selectedItem.value)
+    // И если он существует - присваиваем.
+    if (selectedIndex !== -1) currentItem.value = selectedIndex
+  } else selectedItem.value = items[currentItem.value - 1].value
   // Если в карусели есть элементы.
   if (carouselItems.value) {
     // Вычисляем максимальную ширину.

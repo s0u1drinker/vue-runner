@@ -1,4 +1,7 @@
 <script setup lang="ts">
+
+// FIXME: После ручного ввода не производится проверка на минимальное и максимальное значения.
+
 const { step = 1, float = 0, min = -Infinity, max = Infinity } = defineProps<{
   /**
    * Шаг прибавления/вычитания.

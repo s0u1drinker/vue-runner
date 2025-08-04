@@ -11,16 +11,28 @@ const formData = reactive({
   dateStart: '',
   idActivity: '',
   idWeather: '',
+  lapDistance: 1000,
+  averagePace: '06:00',
+  heartrate: 155,
+  temperature: 0,
+  cadence: 150,
+  climb: 0,
+  weightBefore: 85,
+  weightAfter: 85,
+  comment: '',
+  laps: [],
 })
 // Синхронизируем дату между клиентом и сервером.
 const today = useState('today', () => new Date())
+// Сообщение об ошибке/успешной отправке.
+const message = ref<string>('')
 // Отправка формы.
-function sendForm() {
-  console.log('Send this form fast!')
+function sendForm(): void {
+  message.value = 'Send this form fast!'
 }
 // Очистка формы.
-function clearForm() {
-  console.log('Clear this form fast!')
+function clearForm(): void {
+  message.value = 'Clear this form fast!'
 }
 </script>
 
@@ -50,46 +62,62 @@ function clearForm() {
       <div class="form-add__item-title">Время:</div>
       <InputTime v-model:time="formData.trainingTime" />
     </div>
-
     <div class="form-add__item">
-      <div class="form-add__item-title">Длина круга:</div>
+      <div class="form-add__item-title">Длина круга (м):</div>
+      <InputNumber :min="0" :step="100" v-model="formData.lapDistance" />
     </div>
+
     <div class="form-add__item">
       <div class="form-add__item-title">Круги:</div>
     </div>
+
     <div class="form-add__item">
       <div class="form-add__item-title">Средний темп:</div>
+      <InputTime :showSeconds="false" v-model:time="formData.averagePace" />
     </div>
     <div class="form-add__item">
       <div class="form-add__item-title">Пульс:</div>
+      <InputNumber :min="0" v-model="formData.heartrate" />
     </div>
     <div class="form-add__item">
       <div class="form-add__item-title">Температура:</div>
+      <InputNumber :min="-40" :max="60" v-model="formData.temperature" />
     </div>
     <div class="form-add__item">
       <div class="form-add__item-title">Погода:</div>
-      <CarouselSimple :items="weatherList" />
+      <CarouselSimple :items="weatherList" v-model="formData.idWeather" />
     </div>
     <div class="form-add__item">
       <div class="form-add__item-title">Каденс:</div>
+      <InputNumber :min="0" v-model="formData.cadence" />
     </div>
     <div class="form-add__item">
-      <div class="form-add__item-title">Набор высоты:</div>
+      <div class="form-add__item-title">Набор высоты (м):</div>
+      <InputNumber :min="0" v-model="formData.climb" />
     </div>
     <div class="form-add__item">
       <div class="form-add__item-title">Вес до:</div>
+      <InputNumber :float="1" :min="0" :step="0.1" v-model="formData.weightBefore" />
     </div>
     <div class="form-add__item">
       <div class="form-add__item-title">Вес после:</div>
+      <InputNumber :float="1" :min="0" :step="0.1" v-model="formData.weightAfter" />
     </div>
+
     <div class="form-add__item">
       <div class="form-add__item-title">Комментарий:</div>
+      <textarea v-model="formData.comment"></textarea>
+    </div>
+
+    <div class="form-add__item">
+      <p class="form-add__message">{{ message }}</p>
     </div>
     <div class="form-add__item form-add__buttons">
       <button class="button button_outline_gray" @click="clearForm">Очистить</button>
       <button type="submit" class="button button_blue" @click="sendForm">Сохранить</button>
     </div>
   </form>
+  <pre>{{ formData }}</pre>
 </template>
 
 <style scoped>
@@ -124,6 +152,10 @@ function clearForm() {
     @media (--viewport-sm) {
       width: 10rem;
     }
+  }
+
+  &__message {
+    min-height: 1rem;
   }
 
   &__buttons {
