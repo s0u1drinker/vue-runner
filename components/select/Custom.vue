@@ -16,18 +16,18 @@ const dropdownStyle = reactive<CSSProperties>({
   visibility: 'hidden'
 })
 // Индекс выбранного элемента.
-const selectedItemIndex = ref(-1)
+const selectedItemIndex = ref<number>(list.findIndex((item) => item.value === selectedValue.value))
 // Индекс элемента, который выделен клавишами <ArrowUp>, <ArrowDown> в выпадающем списке.
-const focusItemIndex = ref(selectedItemIndex.value)
+const focusItemIndex = ref<number>(selectedItemIndex.value)
 // Ширина элемента <.c-select__value>.
-const valueWidth = ref(0)
+const valueWidth = ref<number>(0)
 // Флаг отображения выпадающего списка.
 // Поднят, т.к. необходимо вычислить ширину.
-const showDropdown = ref(true)
+const showDropdown = ref<boolean>(true)
 // Флаг отображения заглушки.
-const showPreloader = ref(true)
+const showPreloader = ref<boolean>(true)
 // Имя иконки. Зависит от видимости выпадающего списка.
-const iconName = computed(() => {
+const iconName = computed<string>((): string => {
   return showDropdown.value ? 'material-symbols:close-small-outline-rounded' : 'material-symbols:arrow-drop-down-rounded'
 })
 
@@ -100,6 +100,7 @@ function clickHandler(e: MouseEvent) {
   }
 }
 // Вешаем обработчик нажатия клавиш.
+// Почему "keydown"? Потому, что при нажатии на стрелки, по дефолту, двигается скролл.
 document?.body.addEventListener('keydown', keyDownHandler)
 // Вешаем обработчик клика.
 document?.body.addEventListener('click', clickHandler)
