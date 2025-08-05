@@ -106,7 +106,12 @@ function clearForm(): void {
 
     <div class="form-add__item">
       <div class="form-add__item-title">Комментарий:</div>
-      <textarea v-model="formData.comment"></textarea>
+      <TextareaNative
+        :rows="4"
+        :placeholder="'Самочувствие / негативные или положительные моменты / обстановка вокруг и т.д. и т.п.'"
+        :maxLength="120"
+        v-model="formData.comment"
+      />
     </div>
 
     <div class="form-add__item">
@@ -135,6 +140,7 @@ function clearForm(): void {
     display: flex;
     flex-direction: column;
     gap: var(--indent-half);
+    align-items: flex-start;
 
     @media (--viewport-sm) {
       flex-direction: row;
