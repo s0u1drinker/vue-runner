@@ -1,18 +1,20 @@
 <script setup lang="ts">
 import type { Workout } from '@/types/workout'
 
+// TODO: Объединить с компонентом <FormEditLap>.
+
 const activityList = storeToRefs(useActivityStore()).getActivitiesForSelect
 const weatherList = storeToRefs(useWeatherStore()).getActivitiesForSelect
 
-// const formData = reactive<Workout>({
-const formData = reactive({
+const formData = reactive<Workout>({
+  id: '',
   trainingTime: '',
   distance: 0,
   dateStart: '',
   idActivity: '',
   idWeather: '',
   lapDistance: 1000,
-  averagePace: '06:00',
+  averagePace: '',
   heartrate: 155,
   temperature: 0,
   cadence: 150,
@@ -55,6 +57,14 @@ function clearForm(): void {
       />
     </div>
     <div class="form-add__item">
+      <div class="form-add__item-title">Длина круга (м):</div>
+      <InputNumber :min="0" :step="100" v-model="formData.lapDistance" />
+    </div>
+    <div class="form-add__item">
+      <div class="form-add__item-title">Круги:</div>
+      <LapsAdd :lapDistance="formData.lapDistance" v-model="formData.laps" />
+    </div>
+    <div class="form-add__item">
       <div class="form-add__item-title">Дистанция (км):</div>
       <InputNumber :float="2" :min="0" v-model="formData.distance" />
     </div>
@@ -62,15 +72,6 @@ function clearForm(): void {
       <div class="form-add__item-title">Время:</div>
       <InputTime v-model:time="formData.trainingTime" />
     </div>
-    <div class="form-add__item">
-      <div class="form-add__item-title">Длина круга (м):</div>
-      <InputNumber :min="0" :step="100" v-model="formData.lapDistance" />
-    </div>
-
-    <div class="form-add__item">
-      <div class="form-add__item-title">Круги:</div>
-    </div>
-
     <div class="form-add__item">
       <div class="form-add__item-title">Средний темп:</div>
       <InputTime :showSeconds="false" v-model:time="formData.averagePace" />
@@ -103,7 +104,6 @@ function clearForm(): void {
       <div class="form-add__item-title">Вес после:</div>
       <InputNumber :float="1" :min="0" :step="0.1" v-model="formData.weightAfter" />
     </div>
-
     <div class="form-add__item">
       <div class="form-add__item-title">Комментарий:</div>
       <TextareaNative
@@ -113,7 +113,6 @@ function clearForm(): void {
         v-model="formData.comment"
       />
     </div>
-
     <div class="form-add__item">
       <p class="form-add__message">{{ message }}</p>
     </div>

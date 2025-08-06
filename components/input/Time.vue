@@ -1,6 +1,7 @@
 <script setup lang="ts">
-const { showSeconds = true } = defineProps<{
-  showSeconds?: boolean
+const { showSeconds = true, showHours = true } = defineProps<{
+  showSeconds?: boolean,
+  showHours?: boolean,
 }>()
 
 const time = defineModel('time', {
@@ -17,7 +18,7 @@ const minutes = ref('00')
 const seconds = ref('00')
 // Собираем время.
 const computedTime = computed(() => {
-  return `${hours.value}:${minutes.value}${showSeconds ? `:${seconds.value}` : ''}`
+  return `${showHours ? `${hours.value}:` : ''}${minutes.value}${showSeconds ? `:${seconds.value}` : ''}`
 })
 // Обновляем модель при изменении времени.
 watch(computedTime, () => {
@@ -30,21 +31,28 @@ onMounted(() => {
   // Если массив состоит из 2-х или 3-х элементов,
   if ([2, 3].includes(splitTime.length)) {
     // присваиваем значения соответствующим переменным.
-    hours.value = splitTime[0]
-    minutes.value = splitTime[1]
-    if (showSeconds) seconds.value = splitTime[2]
+    if (showHours) {
+      hours.value = splitTime[0]
+      minutes.value = splitTime[1]
+      if (showSeconds) seconds.value = splitTime[2]
+    } else {
+      minutes.value = splitTime[0]
+      if (showSeconds) seconds.value = splitTime[1]
+    }
   }
 })
 </script>
 
 <template>
   <div class="i-time">
-    <InputTimeInput
-      class="input i-time__input"
-      :max="23"
-      v-model="hours"
-    />
-    <span class="i-time__colon">:</span>
+    <template v-if="showHours">
+      <InputTimeInput
+        class="input i-time__input"
+        :max="23"
+        v-model="hours"
+      />
+      <span class="i-time__colon">:</span>
+    </template>
     <InputTimeInput
       class="input i-time__input"
       v-model="minutes"
