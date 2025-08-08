@@ -3,9 +3,15 @@ import type { Lap } from '@/types/lap'
 import type { LapComputed } from '@/types/lapComputed';
 import type { TableTHead } from '@/types/tableThead';
 
-const props = defineProps<{
+const { laps, lapDistance, showControls = false } = defineProps<{
   laps: Lap[],
-  lapDistance: number
+  lapDistance: number,
+  showControls?: boolean,
+}>()
+
+const emit = defineEmits<{
+  edit: [id: number],
+  delete: [id: number]
 }>()
 
 /**
@@ -28,14 +34,14 @@ const computedLaps = computed(() => {
   let lapFast: LapComputed = { time: '', seconds: Infinity }
   let lapBar: number = -Infinity
 
-  for(let lap of props.laps) {
+  for(let lap of laps) {
     const lapTimeSeconds = timeToSeconds(lap.pace)
 
     // Вычисляем медленный круг.
     if (lapTimeSeconds > lapBar) {
       lapBar = lapTimeSeconds
 
-      if (lap.distance === props.lapDistance) {
+      if (lap.distance === lapDistance) {
         lapSlow.time = lap.pace
         lapSlow.seconds = lapTimeSeconds
       }
@@ -74,13 +80,14 @@ function checkClass(pace: string): string | null {
             :class="{ 'extra-column': th?.extraColumn }"
             :key="`${th.title}-${index}`"
           >{{ th.title }}</th>
+          <th v-if="showControls"></th>
         </tr>
       </thead>
       <tbody>
-        <template v-if="props.laps.length > 0">
-          <tr class="t-laps__tr" v-for="(lap, index) in props.laps" :key="index">
+        <template v-if="laps.length > 0">
+          <tr class="t-laps__tr" v-for="(lap, index) in laps" :key="index">
             <td :class="checkClass(lap.pace)">
-              {{ `${lap.distance < props.lapDistance ? '<' : ''}${lap.idLap}` }}
+              {{ `${lap.distance < lapDistance ? '<' : ''}${lap.idLap}` }}
             </td>
             <td class="extra-column">{{ lap.lapTime }}</td>
             <td :class="checkClass(lap.pace)">{{ lap.pace }}</td>
@@ -91,6 +98,14 @@ function checkClass(pace: string): string | null {
             </td>
             <td>{{ lap.heartRate }}</td>
             <td>{{ lap.totalTime }}</td>
+            <td class="t-laps__controls" v-if="showControls">
+              <button class="button t-laps__control-button" @click="emit('edit', lap.idLap)">
+                <Icon name="material-symbols:edit-square-outline-rounded" />
+              </button>
+              <button class="button t-laps__control-button" @click="emit('delete', lap.idLap)">
+                <Icon name="material-symbols:delete-forever-outline" />
+              </button>
+            </td>
           </tr>
         </template>
         <tr class="t-laps__tr_no-data" v-else>
@@ -154,6 +169,20 @@ function checkClass(pace: string): string | null {
       gap: var(--indent-half);
       align-items: center;
       margin-top: var(--indent);
+    }
+  }
+
+  &__controls {
+    display: flex;
+    gap: var(--indent-half);
+  }
+
+  &__control-button {
+    padding: var(--indent-quarter);
+    border: 0 none;
+
+    &:hover {
+      color: var(--red);
     }
   }
 }

@@ -165,6 +165,7 @@ function clearForm(): void {
 
   &__buttons {
     display: flex;
+    flex-direction: row;
     gap: var(--indent);
   }
 }

@@ -15,6 +15,7 @@ const emit = defineEmits<{
 const currentLapValue = reactive<Lap>({ ...lap })
 // Сообщение об ошибке.
 const errMessage = ref<string>('')
+
 // Сохранение формы.
 function saveForm() {
   // Проверки...
@@ -58,13 +59,21 @@ function saveForm() {
 </template>
 
 <style scoped>
+@import '@/assets/css/media.postcss';
+
 .fe-lap {
   display: flex;
+  flex-direction: column;
   gap: var(--indent);
   padding: var(--indent);
   border: var(--border);
   border-radius: .25rem;
   position: relative;
+  width: 15rem;
+
+  @media (--viewport-sm) {
+    width: auto;
+  }
 
   &::before {
     --size: 5rem;
@@ -91,16 +100,25 @@ function saveForm() {
 
   &__item {
     display: flex;
+    flex-direction: column;
     gap: var(--indent-half);
     align-items: center;
+
+    @media (--viewport-sm) {
+      flex-direction: row;
+    }
   }
 
   &__title {
-    text-align: right;
-    width: 8rem;
+    text-align: center;
+    width: 7rem;
 
     &::after {
       content: ':';
+    }
+
+    @media (--viewport-sm) {
+      text-align: right;
     }
   }
 
@@ -110,6 +128,7 @@ function saveForm() {
 
   &__buttons {
     justify-content: center;
+    flex-direction: row;
     gap: var(--indent);
   }
 }
