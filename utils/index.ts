@@ -146,6 +146,27 @@ export function timeToSeconds(time: string): number {
   return secondsToReturn
 }
 /**
+ * Переводит количество секунд в запись формата "ЧЧ:ММ:СС" или "ММ:СС".
+ * @param seconds Количество секунд.
+ * @param showHours Показывать часы.
+ * @returns Строка формата "ЧЧ:ММ:СС" или "ММ:СС".
+ */
+export function secondsToTime(seconds: number, showHours: boolean = true): string {
+  let timeToReturn = showHours ? '00:00:00' : '00:00'
+
+  if (typeof seconds === 'number') {
+    if (seconds > 0) {
+      const timeHours = Math.floor(seconds / 3600).toString().padStart(2, '0')
+      const timeMinutes = Math.floor((seconds % 3600) / 60).toString().padStart(2, '0')
+      const timeSeconds = (seconds % 60).toString().padStart(2, '0')
+
+      timeToReturn = `${showHours ? `${timeHours}:` : ''}${timeMinutes}:${timeSeconds}`
+    } else console.error(`Количество секунд <= 0. Ожидалось натуральное число.`)
+  } else console.error(`Неверный тип переменной: ${typeof seconds}. Ожидалось число.`)
+
+  return timeToReturn
+}
+/**
  * Считает процент с указанной точностью.
  * @param currentValue Текущее значение.
  * @param maxValue Максимальное значение.
@@ -163,7 +184,6 @@ export function getPercent(currentValue: number, maxValue: number, precision: nu
 
   return percent
 }
-
 /**
  * Возвращает случайное число в диапазоне.
  * @param min Минимальное значение.
@@ -176,7 +196,6 @@ export function getRandom(min: number, max: number): number {
   
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
-
 /**
  * Среднее значение.
  * @param all Массив чисел или их сумма.
@@ -193,7 +212,6 @@ export function getAverage(all: number | number[], count: number, precision: 0 |
 
   return Number((sum / count).toFixed(precision)) || 0
 }
-
 /**
  * Возвращает список недель для элемента <SelectNative> за указанный период.
  * @param year Год.
@@ -238,7 +256,6 @@ export function getListOfWeeksForMonthToSelect(year: number | string, month: num
     return []
   }
 }
-
 /**
  * Проверяет строку на соответствие шаблону ДД.ММ.ГГГГ.
  * @param dateString Строка, предположитльно, в формате ДД.ММ.ГГГГ.
@@ -246,4 +263,35 @@ export function getListOfWeeksForMonthToSelect(year: number | string, month: num
  */
 export function isValidDateString(dateString: string) {
   return (typeof dateString === 'string') ? /^[0-9][0-9]\.[0|1][0-9]\.20[0-9][0-9]$/.test(dateString) : false
+}
+/**
+ * Вычисляет темп бега.
+ * @param distance Дистанция в метрах.
+ * @param time Время в виде строки.
+ * @returns Строка вида "ММ:СС".
+ */
+export function calculatePace(distance: number, time: string): string {
+  let paceToReturn = '00:00'
+  // Проверяем типы переданных переменных.
+  if (typeof distance === 'number') {
+    if (typeof time === 'string') {
+      // Переводим время в секунды.
+      const timeSeconds = timeToSeconds(time)
+      // Переводим метры в километры.
+      const distanceKm = distance / 1000
+      // Если конвертация времени выполнена успешно.
+      if (timeSeconds) {
+        // Вычисляем темп в секундах на километр.
+        const secondsPerKm = timeSeconds / distanceKm
+        // Из полученных секунд вычисляем минуты.
+        const minutes = Math.floor(secondsPerKm / 60)
+        // И остаток секунд.
+        const seconds = Math.round(secondsPerKm % 60)
+        // Собираем в красивую строку.
+        paceToReturn = `${prettyNumberForDateAndTime(minutes)}:${prettyNumberForDateAndTime(seconds)}`
+      }
+    } else console.error(`Неверный тип переменной с указанием времени: ${typeof time}. Ожидалась строка.`)
+  } else console.error(`Неверный тип переменной с указанием дистанции: ${typeof distance}. Ожидалось число.`)
+
+  return paceToReturn
 }

@@ -2,9 +2,11 @@
 import type { Lap } from '@/types/lap'
 
 // TODO: Объединить с компонентом <FormAddWorkout>.
+// TODO: Проверки при сохранении.
 
-const { lap } = defineProps<{
+const { lap, lapDistance } = defineProps<{
   lap: Lap,
+  lapDistance: number,
 }>()
 
 const emit = defineEmits<{
@@ -15,7 +17,32 @@ const emit = defineEmits<{
 const currentLapValue = reactive<Lap>({ ...lap })
 // Сообщение об ошибке.
 const errMessage = ref<string>('')
-
+// Количество секунд общего времени.
+const totalTimeSeconds = computed(() => {
+  return timeToSeconds(lap.totalTime)
+})
+// Наблюдаем за изменением времени круга, чтобы пересчитать темп и общее время.
+watch(() => currentLapValue.lapTime, (newValue) => {
+  // Вычисляем темп. Для этого сначала необходимо сравнить дистанцию текущего круга с дистанцией круга, установленной в рамках тренировки.
+  if (currentLapValue.distance !== lapDistance) {
+    // Не равны. Что ж... необходимо понять как именно они не равны!
+    if (currentLapValue.distance < lapDistance) {
+      // Если текущее значение меньше - вычисляем темп с помощтю специальной функции.
+      currentLapValue.pace = calculatePace(currentLapValue.distance, currentLapValue.lapTime)
+    } else if (currentLapValue.distance > lapDistance) {
+      // Если больше - громко ругаемся в консоль, ибо при стандартном поведении такое невозможно.
+      console.error(`Алгоритм зашёл "не в ту дверь": текущее значение длины круга оказалось больше установленного в рамках тренировки. Необходима помощь техножрецов.`)
+    } else {
+      // Следствие ведут Колобки...
+      console.error('Ничего не понимаю!')
+    }
+  } else {
+    // Всё совпадает, а значит и темп с временем круга тоже совпадают.
+    currentLapValue.pace = newValue
+  }
+  // Вычисляем общее время.
+  currentLapValue.totalTime = secondsToTime(totalTimeSeconds.value + timeToSeconds(newValue))
+})
 // Сохранение формы.
 function saveForm() {
   // Проверки...
@@ -41,11 +68,11 @@ function saveForm() {
       </div>
       <div class="fe-lap__item">
         <span class="fe-lap__title">Темп</span>
-        <InputTime :showHours="false" v-model:time="currentLapValue.pace" />
+        <span>{{ currentLapValue.pace }}</span>
       </div>
       <div class="fe-lap__item">
         <span class="fe-lap__title">Общее время</span>
-        <InputTime v-model:time="currentLapValue.totalTime" />
+        <span>{{ currentLapValue.totalTime }}</span>
       </div>
       <div class="fe-lap__item">
         <p class="fe-lap__message">{{ errMessage }}</p>
@@ -103,6 +130,7 @@ function saveForm() {
     flex-direction: column;
     gap: var(--indent-half);
     align-items: center;
+    min-height: 1.5rem;
 
     @media (--viewport-sm) {
       flex-direction: row;
@@ -122,9 +150,7 @@ function saveForm() {
     }
   }
 
-  &__message {
-    min-height: 1rem;
-  }
+  &__message {}
 
   &__buttons {
     justify-content: center;

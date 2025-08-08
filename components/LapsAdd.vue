@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import type { Lap } from '@/types/lap'
 
+// TODO: Пересчёт общего времени при удалении или изменении(если было изменено время круга) данных о круге.
+// TODO: Блокировка кнопки "Добавить", если длина последнего круга меньше установленной в рамках тренировки.
+
 const laps = defineModel<Lap[]>({ default: [] })
 
 const { lapDistance } = defineProps<{
@@ -44,8 +47,6 @@ function addLap(): void {
     const lastLapIndex = lapsLength - 1
     // Обновляем данные в шаблоне значениями последнего круга.
     newLap.heartRate = laps.value[lastLapIndex].heartRate
-    newLap.lapTime = laps.value[lastLapIndex].lapTime
-    newLap.pace = laps.value[lastLapIndex].pace
     newLap.totalTime = laps.value[lastLapIndex].totalTime
   }
 
@@ -107,6 +108,7 @@ function deleteLap(idLap: number): void {
     <div class="l-add__inner" v-else>
       <FormEditLap
         :lap="lapToForm"
+        :lapDistance
         @cancel="closeForm"
         @save="saveLap"
         v-if="showAddForm"

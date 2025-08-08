@@ -143,7 +143,6 @@ function clearForm(): void {
 
     @media (--viewport-sm) {
       flex-direction: row;
-      align-items: center;
       gap: 0;
     }
 
@@ -155,6 +154,7 @@ function clearForm(): void {
   &__item-title {
 
     @media (--viewport-sm) {
+      transform: translateY(50%);
       width: 10rem;
     }
   }
