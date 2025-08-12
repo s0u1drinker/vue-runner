@@ -10,6 +10,13 @@
   }
 }
 /* Tags */
+main > h1 {
+  text-align: center;
+
+  @media (--viewport-md) {
+    text-align: left;
+  }
+}
 th, td {
   padding: var(--indent-quarter) var(--indent-half);
   text-align: center;
@@ -17,6 +24,9 @@ th, td {
   @media (--viewport-sm) {
     padding: var(--indent-quarter) var(--indent-half);
   }
+}
+fieldset {
+  margin: 0;
 }
 /* Classes */
 .link {

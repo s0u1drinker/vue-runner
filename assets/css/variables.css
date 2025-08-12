@@ -21,6 +21,10 @@
   --light-red: #FF000044;
   --red: #FF0000;
   --dark-red: #8B0000;
+  /* Пьедестал */
+  --gold: #d4af37;
+  --silver: #c0c0c0;
+  --bronze: #CD7F32;
   /* Основные отступы */
   --indent: 1rem;
   --indent-double: calc(var(--indent) * 2);/* 2x */

@@ -2,6 +2,11 @@
 import type { CSSProperties } from 'vue'
 import type { SelectCustomOptions } from '@/types/selectCustomOptions'
 
+// TODO: Поиграться с дизайном компонента: выпадающий список на всю ширину, тень компонента, красивое оформление выделенного элемента.
+// TODO: Добавить атрибут "disabled".
+// FIXME: На этапе отображения прелоадера наблюдаются проблемы с шириной элемента (Статистика -> Цели -> Неделя).
+// FIXME: Необходимо добавить анализ направления "выпадения" списка (вниз или вверх).
+
 const { list } = defineProps<{
   list: SelectCustomOptions[]
 }>()
@@ -31,6 +36,13 @@ const iconName = computed<string>((): string => {
   return showDropdown.value ? 'material-symbols:close-small-outline-rounded' : 'material-symbols:arrow-drop-down-rounded'
 })
 
+watch(selectedValue, () => {
+  // Изменение индекса при изменении значения.
+  selectedItemIndex.value = list.findIndex((item) => item.value === selectedValue.value)
+  // И фокуса.
+  focusItemIndex.value = selectedItemIndex.value
+})
+
 onMounted(() => {
   // Если есть элемент "Выпадающий список".
   if (dropdownRef.value) {
@@ -51,11 +63,9 @@ function toggleDropdown() {
   if (!showDropdown.value) focusItemIndex.value = selectedItemIndex.value
 }
 // Функция выбора элемента.
-function selectItem(newValue: string, index: number) {
+function selectItem(newValue: string) {
   // Выбранное значение.
   selectedValue.value = newValue
-  // Индекс выбранного элемента.
-  selectedItemIndex.value = index
   // Убираем выпадающий список.
   toggleDropdown()
 }
@@ -68,7 +78,7 @@ function keyDownHandler(e: KeyboardEvent) {
       break
     case 'ArrowDown':
     case 'ArrowUp':
-      // Если список показан b tcnm элементы в выпадающем спсике.
+      // Если список показан и если элементы в выпадающем спсике.
       if (showDropdown.value && itemsRef.value) {
         // Индекс последнего элемента.
         const lastIndex = itemsRef.value.length - 1
@@ -150,10 +160,10 @@ onBeforeUnmount(() => {
         class="c-select__item"
         :class="{ 'c-select__item_selected': item.value === selectedValue }"
         v-for="(item, index) in list"
-        :key="item.value"
-        @click="selectItem(item.value, index)"
-        @keyup.space="selectItem(item.value, index)"
-        @keyup.enter="selectItem(item.value, index)"
+        :key="index"
+        @click="selectItem(item.value)"
+        @keyup.space="selectItem(item.value)"
+        @keyup.enter="selectItem(item.value)"
         role="menuitem"
         tabindex="0"
         ref="listItems"
@@ -254,6 +264,11 @@ onBeforeUnmount(() => {
         fill: var(--white);
       }
     }
+  }
+
+  &__item-text {
+    overflow: hidden;
+    white-space: nowrap;
   }
 }
 </style>

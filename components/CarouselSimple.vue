@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { SelectCustomOptions } from '@/types/selectCustomOptions'
 
+// TODO: Добавить атрибут "disabled".
 // FIXME: Переосмыслить логику расчёта нового значения порядкового номера.
 
 const { items } = defineProps<{
@@ -15,7 +16,7 @@ const containerWidth = ref<number>(0)
 // Минимальная ширина для элемента <.carousel-s__item>. 
 const minWidthStyle = ref<string>('auto')
 // Порядковый номер текущего элемента.
-const currentItem = ref<number>(1)
+const currentItem = ref<number | null>(null)
 // Текущее значение свойства <transition> элемента <.carousel-s__track>
 const trackTransition = ref<string>(transition)
 // Флаг отображения прелоадера.
@@ -30,17 +31,17 @@ const itemsWithDuplication = computed<SelectCustomOptions[]>((): SelectCustomOpt
 // Вычисление сдвига элемента <.carousel-s__track> в зависимости от текущего элемента.
 const trackTranslate = computed<string>((): string => {
   // Если количество переданных в props элементов не менее 2-х, то сдвигать ничего не нужно. 
-  return (items.length > 1) ? `translateX(${-currentItem.value * 100}%)` : 'none'
+  return (currentItem.value && items.length > 1) ? `translateX(${-currentItem.value * 100}%)` : 'none'
 })
 // Флаг состояния <disabled> для кнопок.
 const disabledButtonsFlag = computed<boolean>((): boolean => {
-  // Кнопки необходимо отключить только в том случае, если количество переданных в props элементов не менее 2-х.
+  // Кнопки необходимо отключить только в том случае, если количество переданных в props элементов меньше 2-х.
   return (items.length < 2)
 })
 // Предыдущий элемент с использованием throttle-функции.
-const throttledPrevItem = throttle(() => { currentItem.value-- }, 250)
+const throttledPrevItem = throttle(() => { if (currentItem.value) currentItem.value-- }, 250)
 // Следующий элемент с использованием throttle-функции.
-const throttledNextItem = throttle(() => { currentItem.value++ }, 250)
+const throttledNextItem = throttle(() => { if (currentItem.value) currentItem.value++ }, 250)
 // Наболюдаем за изменением порядкового номера, чтобы сделать плавный переход между первым и последним элементами.
 watch(currentItem, () => {
   // Вычисляем новое значение порядкового номера.
@@ -61,7 +62,7 @@ watch(currentItem, () => {
     }, 250);
   } else {
     // Отправляем родителю новое значение.
-    selectedItem.value = items[currentItem.value - 1].value
+    if (currentItem.value) selectedItem.value = items[currentItem.value - 1].value
   }
 })
 
@@ -71,8 +72,11 @@ onMounted(() => {
     // Определяем его порядковый номер.
     const selectedIndex = items.findIndex((item) => item.value === selectedItem.value)
     // И если он существует - присваиваем.
-    if (selectedIndex !== -1) currentItem.value = selectedIndex
-  } else selectedItem.value = items[currentItem.value - 1].value
+    if (selectedIndex !== -1) currentItem.value = selectedIndex + 1
+  } else {
+    currentItem.value = 1
+    selectedItem.value = items[currentItem.value - 1].value
+  }
   // Если в карусели есть элементы.
   if (carouselItems.value) {
     // Вычисляем максимальную ширину.

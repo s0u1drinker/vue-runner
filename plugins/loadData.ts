@@ -6,6 +6,8 @@ export default defineNuxtPlugin(async () => {
   const activityStore = useActivityStore()
   const weatherStore = useWeatherStore()
   const goalStore = useGoalStore()
+  const achievementStore = useAchievementStore()
+  const statistic = useStatisticStore()
 
   // Поднимаем флаг загрузки данных.
   appStore.setLoadingDataFlag(true)
@@ -14,7 +16,9 @@ export default defineNuxtPlugin(async () => {
     workoutStore.updateWorkoutsFromDB(),
     activityStore.updateActivitiesFromDB(),
     weatherStore.updateWeatherFromDB(),
-    goalStore.updateGoalsFromDB()
+    goalStore.updateGoalsFromDB(),
+    achievementStore.updateAchievementsFromDB(),
+    statistic.updateTotalStatisticFromDB(),
   ])
   .catch((error) => {
     console.error(`Ошибка при загрузке данных: ${error}`)
