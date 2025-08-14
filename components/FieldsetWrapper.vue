@@ -17,6 +17,7 @@ const { legend } = defineProps<{
 .fieldset {
   border-radius: .25rem;
   padding: var(--indent);
+  border: var(--border);
 
   &__legend {
     font-weight: bold;

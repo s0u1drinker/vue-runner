@@ -1,64 +1,173 @@
 <script setup lang="ts">
 import type { SelectNativeOptions } from '@/types/selectNativeOptions'
+import type { GoalWeek } from '@/types/goalWeek'
+import type { GoalMonth } from '@/types/goalMonth'
+import type { GoalYear } from '@/types/goalYear'
+import type { GoalCollections } from '@/types/goalCollections'
 
-const { goals } = storeToRefs(useGoalStore())
+// TODO: Необходимо доработать алгоритм добавления цели: проверка наличия тренировок за указанный период.
+
+const goalsStore = useGoalStore()
+const { goals } = storeToRefs(goalsStore)
 
 const year = ref<string>(String(TODAY_DATE.getFullYear()))
 const month = ref<string>(String(TODAY_DATE.getMonth()))
 const week = ref<string>(String(TODAY_DATE.getWeekNumber()))
+// Флаги для определения периода.
 const showYear = ref<boolean>(false)
 const showMonth = ref<boolean>(false)
 const showWeek = ref<boolean>(false)
+// Флаг прогресса обновления данных в БД.
+const updInProgress = ref<boolean>(false)
+// Текст для отображения периода.
 const textPeriod = ref<string>('-')
-const textGoal = ref<string>('-')
-const textCompleted = ref<string>('-')
-
+// Значение цели.
+const goal = ref<number>(-1)
+// Результат выполнения.
+const completed = ref<number>(-1)
+// Текст для отображения результата выполнения цели.
+const textCompleted = computed<string>(() => {
+  if (completed.value === -1) return '-'
+  else if (goal.value && completed.value) return `${completed.value} км (${getPercent(completed.value, goal.value, 0)}%)`
+  else return `${completed.value} км`
+})
+// Список недель.
 const weekItems = computed<SelectNativeOptions[]>(() => {
   return getListOfWeeksForMonthToSelect(year.value, month.value)
 })
-
+// Наименование коллекции, в которую будут внесены изменения.
+const collectionName = computed<keyof GoalCollections | null>(() => {
+  return (showWeek.value) ? 'weeks' : (showMonth.value) ? 'months' : (showYear.value) ? 'years' : null
+})
+// Наболюдаем за флагом флагом показа года.
 watch(showYear, (newValue) => {
+  // Если стал отключен.
   if (!newValue) {
+    // Отключаем флаги недели и месяца, если они, еонечно же, включены.
     if (showWeek.value) showWeek.value = false
     if (showMonth.value) showMonth.value = false
-
-    textCompleted.value = '-'
-    textGoal.value = '-'
+    // Убираем текстовые значения.
     textPeriod.value = '-'
+    goal.value = -1
+    completed.value = -1
   }
 })
-
+// Наблюдаем за значением месяца.
 watch(month, () => {
+  // Обновляем значение недели: если выбран текущий месяц, то ставим текущую неделю, иначе - первую неделю месяца.
   week.value = (month.value === String(TODAY_DATE.getMonth())) ? String(TODAY_DATE.getWeekNumber()) : weekItems.value[0].value
 })
-
+// Наблюдаем.
 watchEffect(() => {
+  // Если флаг показа года поднят.
   if (showYear.value) {
-    const currentYear = goals.value.years.find((y) => y.year === +year.value)
-
+    // Выбираем цель указанного в компоненте года.
+    const currentYear: GoalYear | undefined = goals.value.years.find((y) => y.year === +year.value)
+    // Обновляем значения.
     textPeriod.value = `${year.value} г.`
-    textGoal.value = currentYear ? `${currentYear.goalDistance} км` : '-'
-    textCompleted.value = currentYear ? `${currentYear.completedDistance} км (${getPercent(currentYear.completedDistance, currentYear.goalDistance, 0)}%)` : '-'
-
+    goal.value = (currentYear && Object.hasOwn(currentYear, 'goalDistance')) ? currentYear.goalDistance : -1
+    completed.value = (currentYear && Object.hasOwn(currentYear, 'completedDistance')) ? currentYear.completedDistance : -1
+    // Если поднят флаг показа месяца.
     if (showMonth.value) {
-      const currentMonth = goals.value.months.find((m) => (m.year === +year.value && m.month === +month.value))
-
+      // Выбираем цель на месяц и год, указанные в компонентах.
+      const currentMonth: GoalMonth | undefined = goals.value.months.find((m) => (m.year === +year.value && m.month === +month.value))
+      // Обновляем текстовые значения.
       textPeriod.value = `${MONTHS[+month.value]} ${textPeriod.value}`
-      textGoal.value = currentMonth ? `${currentMonth.goalDistance} км` : '-'
-      textCompleted.value = currentMonth ? `${currentMonth.completedDistance} км (${getPercent(currentMonth.completedDistance, currentMonth.goalDistance, 0)}%)` : '-'
-
+      goal.value = (currentMonth && Object.hasOwn(currentMonth, 'goalDistance')) ? currentMonth.goalDistance : -1
+      completed.value = (currentMonth && Object.hasOwn(currentMonth, 'completedDistance')) ? currentMonth.completedDistance : -1
+      // Если поднят флаг показа недели.
       if (showWeek.value) {
-        const curretnWeek = goals.value.weeks.find((w) => w.weekNumber === +week.value)
-        const currentWeekItem = weekItems.value.find((item) => item.value === week.value)
-
-        textPeriod.value = currentWeekItem ? currentWeekItem.label.split(':')[1].trim() : '-'
-        textGoal.value = curretnWeek ? `${curretnWeek.goalDistance} км` : '-'
-        textCompleted.value = curretnWeek ? `${curretnWeek.completedDistance} км (${getPercent(curretnWeek.completedDistance, curretnWeek.goalDistance, 0)}%)` : '-'
+        // Выбираем цель на неделю.
+        const curretnWeek: GoalWeek | undefined = goals.value.weeks.find((w) => w.weekNumber === +week.value)
+        // Выбираем указанную неделю из списка недель (для отображения периода).
+        // P.S.: Можно взять даты из цели и путём нехитрых манипуляций привести в красивый вид, но мне показалось, что так будет проще.
+        const currentWeekItemLabel: string | undefined = weekItems.value.find((item) => item.value === week.value)?.label
+        // Обновляем текстовые значения.
+        textPeriod.value = currentWeekItemLabel ? currentWeekItemLabel.split(':')[1].trim() : '-'
+        goal.value = (curretnWeek && Object.hasOwn(curretnWeek, 'goalDistance')) ? curretnWeek.goalDistance : -1
+        completed.value = (curretnWeek && Object.hasOwn(curretnWeek, 'completedDistance')) ? curretnWeek.completedDistance : -1
       }
     }
-
   }
 })
+// Определяет состояние цели (пользователь изменил/добавил) и вызывает соответствующую функцию.
+async function goalChanged(oldValue: number) {
+  let changeOperation: boolean
+  
+  updInProgress.value = true
+  changeOperation = (oldValue === -1) ? await addGoal() : await updateGoal()
+  updInProgress.value = false
+
+  // Если функция вернула ошибка - уведомляем пользователя и возвращаем старое значение.
+  if (!changeOperation) {
+    goal.value = oldValue
+    alert('Ошибка при обновлении данных! Попробуйте ещё раз.')
+  }
+}
+// Добавление цели.
+async function addGoal(): Promise<boolean> {
+  let addResult: boolean = false
+  let goalData: GoalYear | GoalMonth | GoalWeek
+  // Если имя коллекции определено.
+  if (collectionName.value) {
+    // Заполняем базовые данные о цели.
+    goalData = {
+      id: '',
+      year: Number(year.value),
+      goalDistance: goal.value,
+      completedDistance: 0,
+      workoutCounter: 0,
+    }
+    // Если цель устанавливается на неделю.
+    if (showWeek.value) {
+      // FIXME: Нужна функция, которая будет возвращать информацию о неделе (дата начала, дата окончания, номер недели).
+      const weekText = weekItems.value.find((item) => item.value === week.value)?.label.split(':')[1].trim().split('-')
+      const dayStartWeek = (weekText && weekText[0]) ? weekText[0].split('.')[0] : ''
+      const dayEndWeek = (weekText && weekText[1]) ? weekText[1].split('.')[0] : ''
+      const dateStart = dayStartWeek ? new Date(Number(year.value), Number(month.value) - 1, Number(dayStartWeek), 0, 0, 0).toLocaleISOString() : ''
+      const dateEnd = dayEndWeek ? new Date(Number(year.value), Number(month.value) - 1, Number(dayEndWeek), 23, 59, 59).toLocaleISOString() : ''
+      // Добавляем данными на неделю.
+      goalData = {
+        ...goalData,
+        weekNumber: Number(week.value),
+        dateStart: dateStart,
+        dateEnd: dateEnd,
+      }
+    } else if (showMonth.value) {
+      // Или на месяц, если, конечно, установлен соответствующий флаг.
+      goalData = {
+        ...goalData,
+        month: Number(month.value),
+      }
+    }
+    // Добавляем данные в хранилище и БД.
+    addResult = await goalsStore.addGoalInDB(collectionName.value, goalData)
+  } else console.error(`Странная ситуация: функция добавления цели была вызвана при отключенных флагах (${showYear.value}, ${showMonth.value}, ${showWeek.value}).`)
+  // Результат.
+  return addResult
+}
+// Обновление цели.
+async function updateGoal(): Promise<boolean> {
+  let updateResult: boolean = false
+  let idGoal: string = ''
+  // Вычисление идентификатора записи.
+  if (showWeek.value) {
+    idGoal = goals.value.weeks.find((item) => item.weekNumber === Number(week.value))?.id ?? ''
+  } else if (showMonth.value) {
+    idGoal = goals.value.months.find((item) => (item.year === Number(year.value)) && (item.month === Number(month.value)))?.id ?? ''
+  } else if (showYear.value) {
+    idGoal = goals.value.years.find((item) => (item.year === Number(year.value)))?.id ?? ''
+  }
+  // Если имя коллекции и идентификатор записи найдены.
+  if (collectionName.value) {
+    if (idGoal) {
+      // Обновляем данные в хранилище и БД.
+      updateResult = await goalsStore.updateGoalDistanceInDB(collectionName.value, idGoal, goal.value)
+    } else console.error('Идентификатор цели оказался пустым.')
+  } else console.error(`Странная ситуация: функция обновления цели была вызвана при отключенных флагах (${showYear.value}, ${showMonth.value}, ${showWeek.value}).`)
+  // Результат работы.
+  return updateResult
+}
 </script>
 
 <template>
@@ -118,11 +227,19 @@ watchEffect(() => {
       </div>
       <div class="goals__item">
         <span class="goals__item-name bold">Цель:</span>
-        {{ textGoal }}
+        <GoalForm
+          :showEditButton="showYear"
+          :inProgress="updInProgress"
+          @valueChanged="goalChanged"
+          v-model="goal"
+        />
       </div>
       <div class="goals__item">
         <span class="goals__item-name bold">Выполнено:</span>
-        {{ textCompleted }}
+        <Icon name="svg-spinners:clock" v-if="updInProgress" />
+        <template v-else>
+          {{ textCompleted }}
+        </template>
       </div>
     </div>
   </FieldsetWrapper>

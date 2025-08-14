@@ -3,4 +3,5 @@ export type GoalYear = {
   goalDistance: number,
   workoutCounter: number,
   year: number,
+  id: string,
 }
