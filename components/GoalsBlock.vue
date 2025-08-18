@@ -184,6 +184,7 @@ async function updateGoal(): Promise<boolean> {
         </label>
         <CarouselSimple
           :items="YEARS_FOR_SELECT"
+          :disabled="!showYear"
           v-model="year"
         />
       </div>
@@ -199,7 +200,7 @@ async function updateGoal(): Promise<boolean> {
         </label>
         <CarouselSimple
           :items="MONTHS_FOR_SELECT"
-          :disabled="showMonth"
+          :disabled="!showMonth"
           v-model="month"
         />
       </div>

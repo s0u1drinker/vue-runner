@@ -1,11 +1,17 @@
 <script setup lang="ts">
 import type { SelectCustomOptions } from '@/types/selectCustomOptions'
 
-// TODO: Добавить атрибут "disabled".
 // FIXME: Переосмыслить логику расчёта нового значения порядкового номера.
 
-const { items } = defineProps<{
-  items: SelectCustomOptions[]
+const { items, disabled = false } = defineProps<{
+  /**
+   * Элементы карусели.
+   */
+  items: SelectCustomOptions[],
+  /**
+   * Состояние "disabled".
+   */
+  disabled?: boolean,
 }>()
 
 const selectedItem = defineModel<string>()
@@ -35,8 +41,7 @@ const trackTranslate = computed<string>((): string => {
 })
 // Флаг состояния <disabled> для кнопок.
 const disabledButtonsFlag = computed<boolean>((): boolean => {
-  // Кнопки необходимо отключить только в том случае, если количество переданных в props элементов меньше 2-х.
-  return (items.length < 2)
+  return disabled || (items.length < 2)
 })
 // Предыдущий элемент с использованием throttle-функции.
 const throttledPrevItem = throttle(() => { if (currentItem.value) currentItem.value-- }, 250)
@@ -113,7 +118,10 @@ function throttle<T extends (...args: any) => any>(func: T, timeout: number) {
 </script>
 
 <template>
-  <div class="carousel-s">
+  <div
+    class="carousel-s"
+    :class="{ 'carousel-s_disabled': disabled }"
+  >
     <button
       class="button button_outline_gray"
       @click="throttledPrevItem"
@@ -160,6 +168,11 @@ function throttle<T extends (...args: any) => any>(func: T, timeout: number) {
 .carousel-s {
   display: flex;
   position: relative;
+
+  &_disabled {
+    color: var(--dark-gray);
+    pointer-events: none;
+  }
 
   &__preloader {
     border-radius: .25rem;
