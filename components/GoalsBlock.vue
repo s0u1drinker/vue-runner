@@ -215,7 +215,8 @@ async function updateGoal(): Promise<boolean> {
         </label>
         <SelectCustom
           :list="weekItems"
-          :disabled="showWeek"
+          :disabled="!showWeek"
+          :numberItemsToDisplay="3"
           v-model="week"
         />
       </div>

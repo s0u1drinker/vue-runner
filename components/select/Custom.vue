@@ -2,38 +2,42 @@
 import type { CSSProperties } from 'vue'
 import type { SelectCustomOptions } from '@/types/selectCustomOptions'
 
-// TODO: Поиграться с дизайном компонента: выпадающий список на всю ширину, тень компонента, красивое оформление выделенного элемента.
-// TODO: Добавить атрибут "disabled".
-// FIXME: На этапе отображения прелоадера наблюдаются проблемы с шириной элемента (Статистика -> Цели -> Неделя).
 // FIXME: Необходимо добавить анализ направления "выпадения" списка (вниз или вверх).
 
-const { list } = defineProps<{
-  list: SelectCustomOptions[]
+const { list, disabled = false, numberItemsToDisplay } = defineProps<{
+  list: SelectCustomOptions[],
+  disabled?: boolean,
+  numberItemsToDisplay?: number,
 }>()
 // Выбранное значение.
 const selectedValue = defineModel()
-// Выпадающий список.
-const dropdownRef = useTemplateRef<HTMLDivElement>('dropdown')
 // Элементы выпадающего списка.
 const itemsRef = useTemplateRef<HTMLElement[]>('listItems')
-// Стили для выпадающего списка.
-const dropdownStyle = reactive<CSSProperties>({
-  visibility: 'hidden'
-})
 // Индекс выбранного элемента.
 const selectedItemIndex = ref<number>(list.findIndex((item) => item.value === selectedValue.value))
 // Индекс элемента, который выделен клавишами <ArrowUp>, <ArrowDown> в выпадающем списке.
 const focusItemIndex = ref<number>(selectedItemIndex.value)
-// Ширина элемента <.c-select__value>.
-const valueWidth = ref<number>(0)
-// Флаг отображения выпадающего списка.
-// Поднят, т.к. необходимо вычислить ширину.
-const showDropdown = ref<boolean>(true)
 // Флаг отображения заглушки.
 const showPreloader = ref<boolean>(true)
+// Флаг отображения выпадающего списка.
+// Поднят, т.к. необходимо вычислить ширину.
+const showDropdown = ref<boolean>(false)
 // Имя иконки. Зависит от видимости выпадающего списка.
 const iconName = computed<string>((): string => {
   return showDropdown.value ? 'material-symbols:close-small-outline-rounded' : 'material-symbols:arrow-drop-down-rounded'
+})
+// Стили для выпадающего списка.
+const styleDropdown = computed<CSSProperties>((): CSSProperties => {
+  const elementStyle: CSSProperties = {}
+  // Если необходимо отобразить только определённое число элементов.
+  if (itemsRef.value && numberItemsToDisplay && itemsRef.value.length > numberItemsToDisplay) {
+    // Высота = (line-height + padding-top + padding-bottom) * количество элементов.
+    elementStyle.height =  `calc((1.25rem + var(--indent)) * ${numberItemsToDisplay})`
+    // Не забываем про вертикальный скролл.
+    elementStyle['overflow-y'] = 'scroll'
+  }
+
+  return elementStyle
 })
 
 watch(selectedValue, () => {
@@ -44,23 +48,15 @@ watch(selectedValue, () => {
 })
 
 onMounted(() => {
-  // Если есть элемент "Выпадающий список".
-  if (dropdownRef.value) {
-    // Устанавливаем ширину блоку, в котором будет отображаться выбранный элемент.
-    valueWidth.value = dropdownRef.value.offsetWidth
-    // Снимаем флаг показа выпадающего списка.
-    showDropdown.value = false
-    // Снимаем флаг показа заглушки.
-    showPreloader.value = false
-    // Делаем элемент видимым.
-    dropdownStyle.visibility = 'visible'
-  } else { console.error(`Что-то пошло не так: не найден выпадающий список ${dropdownRef.value}`) }
+  showPreloader.value = false
 })
 // Показывает/скрывает выпадающий список.
 function toggleDropdown() {
-  showDropdown.value = !showDropdown.value
-  // При закрытии сбрасывает индекс элемента, который выделяется клавишами.
-  if (!showDropdown.value) focusItemIndex.value = selectedItemIndex.value
+  if (!disabled) {
+    showDropdown.value = !showDropdown.value
+    // При закрытии сбрасывает индекс элемента, который выделяется клавишами.
+    if (!showDropdown.value) focusItemIndex.value = selectedItemIndex.value
+  }
 }
 // Функция выбора элемента.
 function selectItem(newValue: string) {
@@ -95,6 +91,10 @@ function keyDownHandler(e: KeyboardEvent) {
         itemsRef.value[focusItemIndex.value].focus()
       }
       break
+    case ' ':
+      // Отменяем действие по умолчанию (прокрутка вниз).
+      e.preventDefault()
+      break
     default:
       break
   }
@@ -123,7 +123,10 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="c-select">
+  <div
+  class="c-select"
+  :class="{ 'c-select_disabled': disabled }"
+  >
     <ThePreloader
       class="c-select__preloader"
       type="blink"
@@ -132,12 +135,13 @@ onBeforeUnmount(() => {
     <button
       class="c-select__button"
       :class="{ 'c-select__button_show-menu': showDropdown }"
-      :style="dropdownStyle"
       @click="toggleDropdown"
       aria-haspopup="true"
       :aria-expanded="showDropdown"
+      :disabled
+      v-else
     >
-      <div class="c-select__value" :style="{ width: `${valueWidth}px` }">
+      <div class="c-select__value">
         <template v-if="selectedItemIndex !== -1">
           <Icon :name="list[selectedItemIndex].icon" v-if="list[selectedItemIndex].icon" />
           <span class="c-select__item-text">{{ list[selectedItemIndex].label }}</span>
@@ -151,8 +155,7 @@ onBeforeUnmount(() => {
     </button>
     <ul
       class="c-select__list"
-      :style="dropdownStyle"
-      ref="dropdown"
+      :style="styleDropdown"
       v-show="showDropdown"
       role="menu"
     >
@@ -182,8 +185,14 @@ onBeforeUnmount(() => {
   display: flex;
   position: relative;
 
+  &_disabled {
+    --border: 1px solid var(--light-gray);
+  }
+
   &__preloader {
     border-radius: var(--b-radius);
+    border: var(--border);
+    height: calc(1.25rem + var(--indent));
     width: 10rem;
   }
 
@@ -193,7 +202,7 @@ onBeforeUnmount(() => {
     display: flex;
     padding: 0;
 
-    &:hover {
+    &:hover:not(:disabled) {
 
       .c-select__arrow {
         background-color: var(--light-gray);
@@ -208,6 +217,7 @@ onBeforeUnmount(() => {
 
       .c-select__arrow {
         background-color: var(--light-red);
+        border-bottom-right-radius: 0;
       }
     }
   }
@@ -235,8 +245,11 @@ onBeforeUnmount(() => {
     border: var(--border);
     border-top: 0 none;
     border-radius: 0 0 var(--b-radius) var(--b-radius);
+    box-shadow: 0px .5rem .75rem rgba(0, 0, 0, 0.5);
     position: absolute;
     left: 0;
+    width: 100%;
+    box-sizing: border-box;
     top: 100%;
     background-color: var(--white);
     z-index: 10;
@@ -248,6 +261,7 @@ onBeforeUnmount(() => {
     gap: var(--indent-quarter);
     padding: .5rem .75rem;
     transition: background-color var(--animation);
+    line-height: 1.25rem;
 
     &:hover {
       background-color: var(--light-gray);
@@ -256,7 +270,7 @@ onBeforeUnmount(() => {
     }
 
     &_selected {
-      background-color: var(--sky-blue);
+      background: var(--sky-blue);
       color: var(--white);
       pointer-events: none;
 
