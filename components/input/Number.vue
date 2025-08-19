@@ -2,8 +2,9 @@
 
 // FIXME: После ручного ввода не производится проверка на минимальное и максимальное значения.
 // FIXME: Элемент "Длина круга" в форме "Добавить тренировку": при вводе 0 - даёт ошибку со строкой и сбрасывает на значение по умолчанию.
+// TODO: Функции инкремента и декремента можно объединить.
 
-const { step = 1, float = 0, min = -Infinity, max = Infinity } = defineProps<{
+const { step = 1, float = 0, min = -Infinity, max = Infinity, disabled = false } = defineProps<{
   /**
    * Шаг прибавления/вычитания.
    */
@@ -20,6 +21,10 @@ const { step = 1, float = 0, min = -Infinity, max = Infinity } = defineProps<{
    * Максимальное значение.
    */
   max?: number,
+  /**
+   * Состояние "disabled".
+   */
+  disabled?: boolean,
 }>()
 
 const inputNumber = defineModel<number | string>({ default: 0})
@@ -27,6 +32,10 @@ const inputNumber = defineModel<number | string>({ default: 0})
 const defaultValue = inputNumber.value
 // Тип экранной клавиатуры.
 const inputMode = computed(() => float ? 'decimal' : 'numeric')
+// Состояние disabled для кнопки уменьшения значения.
+const disabledDecrementButton = computed<boolean>((): boolean => disabled || Number(inputNumber.value) <= min)
+// Состояние disabled для кнопки увеличения значения.
+const disabledIncrementButton = computed<boolean>((): boolean => disabled || Number(inputNumber.value) >= max)
 // Уменьшение значения.
 const decrementValue = () => {
   // Конвертируем в число.
@@ -102,10 +111,15 @@ const checkOnBlur = () => {
 </script>
 
 <template>
-  <div class="i-number">
+  <div
+    class="i-number"
+    :class="{ 'i-number_disabled' : disabled }"
+  >
     <button
       class="i-number__button button button_gray"
       type="button"
+      aria-label="Уменьшить"
+      :disabled="disabledDecrementButton"
       @click="decrementValue"
     >-</button>
     <input
@@ -122,6 +136,8 @@ const checkOnBlur = () => {
     <button
       class="i-number__button button button_gray"
       type="button"
+      aria-label="Увеличить"
+      :disabled="disabledIncrementButton"
       @click="incrementValue"
     >+</button>
   </div>
@@ -132,11 +148,28 @@ const checkOnBlur = () => {
   display: flex;
   gap: var(--indent-half);
 
+  &_disabled {
+    
+    & > .i-number__input {
+      border-color: var(--light-gray);
+      color: var(--dark-gray);
+      pointer-events: none;
+    }
+
+    & > .i-number__button {
+      background-color: var(--white);
+    }
+  }
+
   &__button {
     --size: calc(2rem + var(--indent-quarter));
 
     height: var(--size);
     width: var(--size);
+
+    &:disabled {
+      background-color: var(--white);
+    }
   }
 
   &__input {

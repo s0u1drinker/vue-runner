@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Workout } from '@/types/workout'
+import type { Lap } from '@/types/lap'
 
 // TODO: Объединить с компонентом <FormEditLap>.
 
@@ -15,12 +16,12 @@ const formData = reactive<Workout>({
   idWeather: '',
   lapDistance: 1000,
   averagePace: '',
-  heartrate: 155,
+  heartrate: 0,
   temperature: 0,
-  cadence: 150,
+  cadence: 0,
   climb: 0,
-  weightBefore: 85,
-  weightAfter: 85,
+  weightBefore: 0,
+  weightAfter: 0,
   comment: '',
   laps: [],
 })
@@ -28,13 +29,30 @@ const formData = reactive<Workout>({
 const today = useState('today', () => new Date())
 // Сообщение об ошибке/успешной отправке.
 const message = ref<string>('')
+// Флаг расчёта данных на основе информации о кругах:
+// если пользователь добавил данные о кругах, то некоторые показатели расчитываются автоматически.
+const calculationByLaps = computed<boolean>(():boolean => formData.laps.length ? true : false)
+// Следим за количествои кругов и пересчитываем некоторые параметры.
+watch(formData.laps, () => {
+  formData.distance = (calculationByLaps.value) ? getAverageValueOfParameter<number>('distance') : 0
+  formData.trainingTime = (calculationByLaps.value) ? getAverageValueOfParameter<string>('totalTime') : ''
+  formData.heartrate = (calculationByLaps.value) ? getAverageValueOfParameter<number>('heartRate') : 0
+  formData.averagePace = (calculationByLaps.value) ? getAverageValueOfParameter<string>('pace') : ''
+})
+// Среднее значение параметра из массива "formData.laps".
+function getAverageValueOfParameter<T>(parameter: keyof Lap): T {
+  console.log(parameter)
+  console.log(formData.laps[0][parameter])
+  
+  return formData.laps[0][parameter] as T
+}
 // Отправка формы.
 function sendForm(): void {
-  message.value = 'Send this form fast!'
+  message.value = 'Форма будет отправлена... не сейчас.'
 }
 // Очистка формы.
 function clearForm(): void {
-  message.value = 'Clear this form fast!'
+  message.value = 'Форма будет очищена... скоро.'
 }
 </script>
 
@@ -66,19 +84,35 @@ function clearForm(): void {
     </div>
     <div class="form-add__item">
       <div class="form-add__item-title">Дистанция (км):</div>
-      <InputNumber :float="2" :min="0" v-model="formData.distance" />
+      <InputNumber
+        :float="2"
+        :min="0"
+        :disabled="calculationByLaps"
+        v-model="formData.distance"
+      />
     </div>
     <div class="form-add__item">
       <div class="form-add__item-title">Время:</div>
-      <InputTime v-model:time="formData.trainingTime" />
+      <InputTime
+        :disabled="calculationByLaps"
+        v-model:time="formData.trainingTime"
+      />
     </div>
     <div class="form-add__item">
       <div class="form-add__item-title">Средний темп:</div>
-      <InputTime :showSeconds="false" v-model:time="formData.averagePace" />
+      <InputTime
+        :showSeconds="false"
+        :disabled="calculationByLaps"
+        v-model:time="formData.averagePace"
+      />
     </div>
     <div class="form-add__item">
       <div class="form-add__item-title">Пульс:</div>
-      <InputNumber :min="0" v-model="formData.heartrate" />
+      <InputNumber
+        :min="0"
+        :disabled="calculationByLaps"
+        v-model="formData.heartrate"
+      />
     </div>
     <div class="form-add__item">
       <div class="form-add__item-title">Температура:</div>

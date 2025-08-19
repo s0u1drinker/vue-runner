@@ -1,9 +1,10 @@
 <script setup lang="ts">
 // TODO: проблема с вводом символов на touchpad (onkeydown).
-const { min = 0, max = 59, placeholder = '--' } = defineProps<{
+const { min = 0, max = 59, placeholder = '--', disabled = false } = defineProps<{
   min?: number,
   max?: number,
   placeholder?: string,
+  disabled?: boolean,
 }>()
 const inputValue = defineModel<string>({ default: '00' })
 // Значение при создании компонента.
@@ -51,6 +52,7 @@ function checkMinMax() {
     :min
     :max
     :placeholder
+    :disabled
     @focus.native="onFocus"
     @input="onInput($event as InputEvent)"
     @blur="onBlur"

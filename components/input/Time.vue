@@ -1,7 +1,17 @@
 <script setup lang="ts">
-const { showSeconds = true, showHours = true } = defineProps<{
+const { showSeconds = true, showHours = true, disabled = false } = defineProps<{
+  /**
+   * Показывать сегмент "СС" (секунды).
+   */
   showSeconds?: boolean,
+  /**
+   * Показывать сегмент "ЧЧ" (часы).
+   */
   showHours?: boolean,
+  /**
+   * Состояние "disabled".
+   */
+  disabled?: boolean,
 }>()
 
 const time = defineModel('time', {
@@ -44,25 +54,31 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="i-time">
+  <div
+    class="i-time"
+    :class="{ 'i-time_disabled': disabled }"
+  >
     <template v-if="showHours">
-      <InputTimeInput
+      <InputTimeSegment
         class="input i-time__input"
         :max="23"
+        :disabled
         v-model="hours"
       />
       <span class="i-time__colon">:</span>
     </template>
-    <InputTimeInput
+    <InputTimeSegment
       class="input i-time__input"
+      :disabled
       v-model="minutes"
     />
     <template v-if="showSeconds">
       <span class="i-time__colon">:</span>
-      <InputTimeInput
-      class="input i-time__input"
-      v-model="seconds"
-    />
+      <InputTimeSegment
+        class="input i-time__input"
+        :disabled
+        v-model="seconds"
+      />
     </template>
   </div>
 </template>
@@ -72,6 +88,15 @@ onMounted(() => {
   display: flex;
   gap: var(--indent-quarter);
   align-items: center;
+
+  &_disabled {
+    color: var(--dark-gray);
+
+    & > .i-time__input {
+      border-color: var(--light-gray);
+      color: var(--dark-gray);
+    }
+  }
 
   &__input {
     width: 2.25rem;
