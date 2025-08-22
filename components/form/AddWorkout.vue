@@ -23,28 +23,42 @@ const formData = reactive<Workout>({
   weightBefore: 0,
   weightAfter: 0,
   comment: '',
-  laps: [],
+  laps: <Lap[]>[],
 })
 // Синхронизируем дату между клиентом и сервером.
 const today = useState('today', () => new Date())
 // Сообщение об ошибке/успешной отправке.
 const message = ref<string>('')
+// Флаг статуса показа формы добавления нового круга.
+const formAddIsShown = ref<boolean>(false)
 // Флаг расчёта данных на основе информации о кругах:
 // если пользователь добавил данные о кругах, то некоторые показатели расчитываются автоматически.
-const calculationByLaps = computed<boolean>(():boolean => formData.laps.length ? true : false)
+const calculationByLaps = computed<boolean>((): boolean => formAddIsShown.value || Boolean(formData.laps.length))
 // Следим за количествои кругов и пересчитываем некоторые параметры.
 watch(formData.laps, () => {
-  formData.distance = (calculationByLaps.value) ? getAverageValueOfParameter<number>('distance') : 0
-  formData.trainingTime = (calculationByLaps.value) ? getAverageValueOfParameter<string>('totalTime') : ''
-  formData.heartrate = (calculationByLaps.value) ? getAverageValueOfParameter<number>('heartRate') : 0
-  formData.averagePace = (calculationByLaps.value) ? getAverageValueOfParameter<string>('pace') : ''
+  // Значения по умолчанию.
+  formData.distance = 0
+  formData.trainingTime = '00:00:00'
+  formData.heartrate = 0
+  formData.averagePace = '00:00'
+  // Если данные должны считаться автоматически (установлен флаг = длина массива с кругами больше 0).
+  if (calculationByLaps.value) {
+    let parameterValues = []
+    // Считаем дистанцию.
+    formData.distance = (formData.laps.reduce((sum, lap) => sum = lap.distance + sum, 0) / formData.lapDistance)
+    // Так как время тренировки счмиаеися автоматом при добавлении круга, то просто забираем значение у последней записи.
+    formData.trainingTime = formData.laps.slice(-1)[0].totalTime 
+    // Среднее значение пульса: собираем данные из массива и считаем.
+    parameterValues = formData.laps.flatMap((item) => item.heartRate)
+    formData.heartrate = getAverage(parameterValues, parameterValues.length, 0)
+    // Среднее значение темпа: собираем -> конвертируем -> считаем -> конвертируем обратно.
+    parameterValues = formData.laps.flatMap((item) => timeToSeconds(item.pace))
+    formData.averagePace = secondsToTime(getAverage(parameterValues, parameterValues.length, 0))
+  }
 })
-// Среднее значение параметра из массива "formData.laps".
-function getAverageValueOfParameter<T>(parameter: keyof Lap): T {
-  console.log(parameter)
-  console.log(formData.laps[0][parameter])
-  
-  return formData.laps[0][parameter] as T
+// 
+function disableCalculatedElements(status: boolean): void {
+  formAddIsShown.value = status
 }
 // Отправка формы.
 function sendForm(): void {
@@ -57,7 +71,7 @@ function clearForm(): void {
 </script>
 
 <template>
-  <form class="form-add" @submit.prevent @keydown.enter.prevent>
+  <form class="form-add" @submit.prevent @keydown.enter.stop>
     <p class="form-add__temp-message">Извините, данная форма ещё в разработке.</p>
     <div class="form-add__item">
       <div class="form-add__item-title">Активность:</div>
@@ -76,11 +90,19 @@ function clearForm(): void {
     </div>
     <div class="form-add__item">
       <div class="form-add__item-title">Длина круга (м):</div>
-      <InputNumber :min="0" :step="100" v-model="formData.lapDistance" />
+      <InputNumber
+        :min="0"
+        :step="100"
+        v-model="formData.lapDistance"
+      />
     </div>
     <div class="form-add__item">
       <div class="form-add__item-title">Круги:</div>
-      <LapsAdd :lapDistance="formData.lapDistance" v-model="formData.laps" />
+      <LapsAdd
+        :lapDistance="formData.lapDistance"
+        @showFormToAddNewLap="disableCalculatedElements"
+        v-model="formData.laps"
+      />
     </div>
     <div class="form-add__item">
       <div class="form-add__item-title">Дистанция (км):</div>
@@ -101,7 +123,7 @@ function clearForm(): void {
     <div class="form-add__item">
       <div class="form-add__item-title">Средний темп:</div>
       <InputTime
-        :showSeconds="false"
+        :showHours="false"
         :disabled="calculationByLaps"
         v-model:time="formData.averagePace"
       />

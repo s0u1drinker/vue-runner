@@ -93,6 +93,29 @@ export function prettyNumberForDateAndTime(value: number | string): string {
   return value
 }
 /**
+ * Возвращает красиво оформленное время.
+ * @param uglyTime Некрасивое время вида 1:11 или 2:3.
+ * @returns Строка вида 01:01 или 03:04:05.
+ */
+export function prettyTime(uglyTime: string): string {
+  const uglyTimeType: string = typeof uglyTime
+  let returnTime: string = ''
+
+  if (uglyTimeType === 'string') {
+    const uglyTimeSegments: string[] = uglyTime.split(':')
+    const uglyTimeSegmentsLength: number = uglyTimeSegments.length
+
+    if ([2, 3].includes(uglyTimeSegmentsLength)) {
+      returnTime = uglyTimeSegments.map((segment) => segment.padStart(2, '0')).join(':')
+    } else {
+      returnTime = uglyTime
+      console.error(`Неверное количество элементов после разделения: ${uglyTimeSegmentsLength}`)
+    }
+  } else console.error(`Неверный тип переменной: ${uglyTimeType}. Ожидалась строка.`)
+
+  return returnTime
+}
+/**
  * Индикатор потери веса (разность + процент).
  * @param weightBefore Вес до тренировки.
  * @param weightAfter Вес после тренировки.
@@ -161,7 +184,7 @@ export function secondsToTime(seconds: number, showHours: boolean = true): strin
       const timeSeconds = (seconds % 60).toString().padStart(2, '0')
 
       timeToReturn = `${showHours ? `${timeHours}:` : ''}${timeMinutes}:${timeSeconds}`
-    } else console.error(`Количество секунд <= 0. Ожидалось натуральное число.`)
+    }
   } else console.error(`Неверный тип переменной: ${typeof seconds}. Ожидалось число.`)
 
   return timeToReturn

@@ -2,7 +2,7 @@
 import type { Lap } from '@/types/lap'
 
 // TODO: Объединить с компонентом <FormAddWorkout>.
-// TODO: Проверки при сохранении.
+// TODO: Пересчёт темпа при измененнии дистанции круга.
 
 const { lap, lapDistance } = defineProps<{
   lap: Lap,
@@ -13,14 +13,16 @@ const emit = defineEmits<{
   cancel: [],
   save: [lap: Lap]
 }>()
+
+const modalStore = useModalStore()
+// Количество секунд общего времени при инициализации.
+const totalTimeSecondsDefault: number = timeToSeconds(lap.totalTime)
+// Количество секунд круга при инициализации.
+const lapTimeSecondsDefault: number = timeToSeconds(lap.lapTime)
 // Данные о круге, которые вводит пользователь.
 const currentLapValue = reactive<Lap>({ ...lap })
 // Сообщение об ошибке.
 const errMessage = ref<string>('')
-// Количество секунд общего времени.
-const totalTimeSeconds = computed(() => {
-  return timeToSeconds(lap.totalTime)
-})
 // Наблюдаем за изменением времени круга, чтобы пересчитать темп и общее время.
 watch(() => currentLapValue.lapTime, (newValue) => {
   // Вычисляем темп. Для этого сначала необходимо сравнить дистанцию текущего круга с дистанцией круга, установленной в рамках тренировки.
@@ -38,14 +40,29 @@ watch(() => currentLapValue.lapTime, (newValue) => {
     }
   } else {
     // Всё совпадает, а значит и темп с временем круга тоже совпадают.
-    currentLapValue.pace = newValue
+    currentLapValue.pace = prettyTime(newValue)
   }
   // Вычисляем общее время.
-  currentLapValue.totalTime = secondsToTime(totalTimeSeconds.value + timeToSeconds(newValue))
+  currentLapValue.totalTime = secondsToTime(timeToSeconds(newValue) - lapTimeSecondsDefault + totalTimeSecondsDefault)
 })
 // Сохранение формы.
 function saveForm() {
   // Проверки...
+  if (currentLapValue.distance > 0) {
+    if (timeToSeconds(currentLapValue.lapTime) > 0) {
+      if (currentLapValue.heartRate > 0) {
+        // Отправляем родителю радостную весть об изменениях.
+        emitSave()
+      } else {
+        errMessage.value = 'Не указан пульс.'
+        modalStore.openModalDialog()
+      }
+    } else errMessage.value = 'Укажите время круга.'
+  } else errMessage.value = 'Укажите дистанцию круга.'
+}
+// Генерирует событие сохранения данных о круге.
+function emitSave() {
+  modalStore.closeModalDialog()
   emit('save', currentLapValue)
 }
 </script>
@@ -56,7 +73,7 @@ function saveForm() {
     <div class="fe-lap__form">
       <div class="fe-lap__item">
         <span class="fe-lap__title">Круг</span>
-        <InputNumber :min="100" :max="lap.distance" :step="100" v-model="currentLapValue.distance" />
+        <InputNumber :min="100" :max="lapDistance" :step="100" v-model="currentLapValue.distance" />
       </div>
       <div class="fe-lap__item">
         <span class="fe-lap__title">Пульс</span>
@@ -83,6 +100,15 @@ function saveForm() {
       </div>
     </div>
   </div>
+  <ModalDialog>
+    <template #body>
+      <p>Значение пульса равно "0". Пульсомер сломался или кто-то забыл указать самый важный параметр?</p>
+    </template>
+    <template #buttons>
+      <button class="button button_outline_gray" @click="modalStore.closeModalDialog()">Да, забыл!</button>
+      <button class="button button_blue" @click="emitSave()">Всё верно</button>
+    </template>
+  </ModalDialog>
 </template>
 
 <style scoped>
@@ -150,7 +176,13 @@ function saveForm() {
     }
   }
 
-  &__message {}
+  &__message {
+    text-align: center;
+    color: var(--red);
+    flex: 1;
+    margin: var(--indent-half) 0;
+    min-height: 1.5rem;
+  }
 
   &__buttons {
     justify-content: center;

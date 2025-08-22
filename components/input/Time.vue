@@ -35,9 +35,16 @@ watch(computedTime, () => {
   emit('update:time', computedTime.value)
 })
 
+watch(time, () => splitTimeToSegments())
+
 onMounted(() => {
+  if (time.value && timeToSeconds(time.value) !== 0 ) splitTimeToSegments()
+})
+// Разбивает переданное в компонент значение на сегменты и сохраняет в соответствующие переменные.
+function splitTimeToSegments(): void {
   // Разбиваем время по символу ":".
   const splitTime = time.value.split(':')
+  
   // Если массив состоит из 2-х или 3-х элементов,
   if ([2, 3].includes(splitTime.length)) {
     // присваиваем значения соответствующим переменным.
@@ -46,11 +53,13 @@ onMounted(() => {
       minutes.value = splitTime[1]
       if (showSeconds) seconds.value = splitTime[2]
     } else {
-      minutes.value = splitTime[0]
-      if (showSeconds) seconds.value = splitTime[1]
+      const index = splitTime.length === 2 ? 0 : 1
+
+      minutes.value = splitTime[index]
+      if (showSeconds) seconds.value = splitTime[index + 1]
     }
   }
-})
+}
 </script>
 
 <template>

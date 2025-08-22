@@ -1,13 +1,16 @@
 <script setup lang="ts">
 import type { Lap } from '@/types/lap'
 
-// TODO: Пересчёт общего времени при удалении или изменении(если было изменено время круга) данных о круге.
-// TODO: Блокировка кнопки "Добавить", если длина последнего круга меньше установленной в рамках тренировки.
+// TODO: Пересчёт общего времени при удалении данных о круге.
 
 const laps = defineModel<Lap[]>({ default: [] })
 
 const { lapDistance } = defineProps<{
   lapDistance: number
+}>()
+
+const emit = defineEmits<{
+  showFormToAddNewLap: [status: boolean],
 }>()
 // Флаг для отображения формы добавления/редактирования круга.
 const showAddForm = ref<boolean>(false)
@@ -24,6 +27,8 @@ let lapToForm = reactive<Lap>({
 const canAddLaps = computed<boolean>(() => {
   return lapDistance ? true : false
 })
+// Флаг отключения кнопки.
+const disableButtonAddNewLap = computed<boolean>(() => !laps.value.length ? false : (laps.value.slice(-1)[0].distance < lapDistance))
 // Закрывает форму.
 function closeForm(): void {
   showAddForm.value = false
@@ -55,6 +60,8 @@ function addLap(): void {
   // Открываем форму.
   showAddForm.value = true
 }
+// Генерируем событие, которое показывает статус отображения формы добавления нового круга.
+watch(showAddForm, (newValue: boolean) => emit('showFormToAddNewLap', newValue))
 // Сохраняет данные о круге.
 function saveLap(newLap: Lap): void {
   // Ищем круг с таким же идентификатором.
@@ -63,6 +70,8 @@ function saveLap(newLap: Lap): void {
   if (lapIndex !== -1) {
     // заменяем на новые данные.
     laps.value.splice(lapIndex, 1, newLap)
+    // Пересчитываем общее время у последующих элементов.
+    recalculateLaps(lapIndex)
   } else {
     // Иначе добавляем данные о новом круге.
     laps.value.push(newLap)
@@ -90,15 +99,44 @@ function editLap(idLap: number): void {
  * @param idLap Идентификатор круга.
  */
 function deleteLap(idLap: number): void {
+  console.log(laps.value)
   // Ищем круг с таким же идентификатором.
   const lapIndex = laps.value.findIndex((lap) => lap.idLap === idLap)
   // Если такой круг найден -
   if (lapIndex !== -1) {
     // удаляем.
     laps.value.splice(lapIndex, 1)
-    // Корректировка идентификаторов.
-    laps.value.forEach((item, index) => item.idLap = index + 1)
+    // Если после удаления в массиве остались элементы.
+    if (laps.value.length) {
+      let indexCorrectItem: number = lapIndex
+
+      if (lapIndex === 0) {
+        laps.value[0].totalTime = `00:${laps.value[0].lapTime}`
+        laps.value[0].idLap = 1
+      } else indexCorrectItem--
+
+      recalculateLaps(indexCorrectItem, true)
+    }
   }
+}
+/**
+ * Пересчитывает общее время и корректирует идентификаторы (опционально) в массиве кругов после изменения.
+ * @param index Индекс элемента массива, после которого произошли изменения.
+ * @param needCorrectId Флаг необходимости изменения идентификатора.
+ */
+function recalculateLaps(index: number = 0, needCorrectId: boolean = false): void {
+  if (index >= 0 && index <= laps.value.length - 1) {
+    let totalTimeSeconds: number = timeToSeconds(laps.value[index].totalTime)
+
+    for (let i = index + 1; i < laps.value.length; i++) {
+      const newTotalTimeSeconds: number = timeToSeconds(laps.value[i].lapTime) + totalTimeSeconds
+      // Пересчёт общего времени.
+      laps.value[i].totalTime = secondsToTime(newTotalTimeSeconds)
+      totalTimeSeconds = newTotalTimeSeconds
+      // Корректировка идентификатора.
+      if (needCorrectId) laps.value[i].idLap = i + 1
+    }
+  } else console.error(`Индекс <${index}> не соответствует количеству элементов массива: ${laps.value.length}`)
 }
 </script>
 
@@ -122,7 +160,11 @@ function deleteLap(idLap: number): void {
           @delete="deleteLap"
           v-show="laps.length"
         />
-        <button class="button button_blue" @click="addLap">Добавить</button>
+        <button
+          class="button button_blue"
+          @click="addLap"
+          :disabled="disableButtonAddNewLap"
+        >Добавить</button>
       </template>
     </div>
   </div>

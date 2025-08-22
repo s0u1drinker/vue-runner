@@ -1,5 +1,4 @@
 <script setup lang="ts">
-// TODO: проблема с вводом символов на touchpad (onkeydown).
 const { min = 0, max = 59, placeholder = '--', disabled = false } = defineProps<{
   min?: number,
   max?: number,
