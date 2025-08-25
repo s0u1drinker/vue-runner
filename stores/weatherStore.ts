@@ -29,11 +29,23 @@ export const useWeatherStore = defineStore('weather', {
     /**
      * @returns Список погодных явлений для использования в компоненте <CustomSelect>.
      */
-    getActivitiesForSelect(state): SelectCustomOptions[] {
+    getWeatherListForSelect(state): SelectCustomOptions[] {
       return state.weather.map((weather) => {
         return { value: weather.id, label: weather.description, icon: weather.icon }
       })
     },
+    /**
+     * Возвращает идентификатор погоды по описанию.
+     * @param description Описание (Ясно, Дождь и т.д.)
+     * @returns Идентификатор.
+     */
+    getWeatherIdByDescription(state) {
+      return (description: string): string | undefined => {
+        if (typeof description !== 'string') return undefined
+
+        return state.weather.filter((item) => item.description.toLowerCase() === description.toLowerCase())[0]?.id
+      }
+    }
   },
   actions: {
     /**

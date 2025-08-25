@@ -71,17 +71,10 @@ watch(currentItem, () => {
   }
 })
 
+watch(selectedItem, () => checkSelectedItem())
+
 onMounted(() => {
-  // Если есть значение по умолчанию.
-  if (selectedItem.value) {
-    // Определяем его порядковый номер.
-    const selectedIndex = items.findIndex((item) => item.value === selectedItem.value)
-    // И если он существует - присваиваем.
-    if (selectedIndex !== -1) currentItem.value = selectedIndex + 1
-  } else {
-    currentItem.value = 1
-    selectedItem.value = items[currentItem.value - 1].value
-  }
+  checkSelectedItem()
   // Если в карусели есть элементы.
   if (carouselItems.value) {
     // Вычисляем максимальную ширину.
@@ -95,6 +88,18 @@ onMounted(() => {
     showPreloader.value = false
   } else console.error(`Непредвиденная ошибка: отсутствуют элементы в карусели (${carouselItems.value}).`)
 })
+function checkSelectedItem() {
+  // Если есть значение по умолчанию.
+  if (selectedItem.value) {
+    // Определяем его порядковый номер.
+    const selectedIndex = items.findIndex((item) => item.value === selectedItem.value)
+    // И если он существует - присваиваем.
+    if (selectedIndex !== -1) currentItem.value = selectedIndex + 1
+  } else {
+    currentItem.value = 1
+    selectedItem.value = items[currentItem.value - 1].value
+  }
+}
 /**
  * Ограничивает частоту вызова переданной функции. Используется, главынм образом, на кнопках переключения.
  * @param func Функция.

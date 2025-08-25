@@ -51,4 +51,10 @@ export default defineNuxtConfig({
       appId: process.env.FIREBASE_APP_ID,
     }
   },
+  runtimeConfig: {
+    weatherApiKey: process.env.NUXT_WEATHER_API_KEY,
+    public: {
+      weatherApiUrl: process.env.NUXT_PUBLIC_WEATHER_API_URL,
+    }
+  },
 })

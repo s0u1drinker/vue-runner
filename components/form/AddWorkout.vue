@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import type { Workout } from '@/types/workout'
 import type { Lap } from '@/types/lap'
+import type { WeatherByAPI } from '@/types/weatherByAPI'
 
 // TODO: Объединить с компонентом <FormEditLap>.
 
+const weatherStore = useWeatherStore()
+
 const activityList = storeToRefs(useActivityStore()).getActivitiesForSelect
-const weatherList = storeToRefs(useWeatherStore()).getActivitiesForSelect
+const weatherList = storeToRefs(weatherStore).getWeatherListForSelect
 
 const formData = reactive<Workout>({
   id: '',
@@ -27,8 +30,14 @@ const formData = reactive<Workout>({
 })
 // Синхронизируем дату между клиентом и сервером.
 const today = useState('today', () => new Date())
+// Асинхронный запрос о погоде.
+const { fetchWeather } = useWeather()
 // Сообщение об ошибке/успешной отправке.
 const message = ref<string>('')
+// Флаг запроса данных о погоде по API.
+const pendingDataFromWeatherAPI = ref<boolean>(false)
+// Результат обновления данных о погоде по API.
+const messageResultWeatherAPI = ref<string>('')
 // Флаг статуса показа формы добавления нового круга.
 const formAddIsShown = ref<boolean>(false)
 // Флаг расчёта данных на основе информации о кругах:
@@ -56,7 +65,48 @@ watch(formData.laps, () => {
     formData.averagePace = secondsToTime(getAverage(parameterValues, parameterValues.length, 0))
   }
 })
-// 
+// Очищаем строку с результатом запроса погоды по API.
+watch(messageResultWeatherAPI, () => {
+  if(messageResultWeatherAPI.value) {
+    setTimeout(() => messageResultWeatherAPI.value = '', 3000)
+  }
+})
+
+onMounted(() => {
+  getWeather()
+})
+// Запрос погоды.
+async function getWeather(): Promise<void> {
+  let weatherByAPI: WeatherByAPI | null = null
+  // Сбрасываем текущие данные и поднимаем флаг запроса.
+  formData.temperature = 0
+  formData.idWeather = ''
+  messageResultWeatherAPI.value = ''
+  pendingDataFromWeatherAPI.value = true
+  // Ждём ответ.
+  weatherByAPI = await fetchWeather()
+  // Проверяем на ошибки.
+  if (weatherByAPI) {
+    if (!weatherByAPI.error) {
+      // Получаем идентификатор погодного явления по описанию.
+      const idWeather = weatherStore.getWeatherIdByDescription(weatherByAPI.description)
+      // Если элемент найден - подставляем его идентификатор, иначе останется выбранным первый элемент.
+      if (idWeather) formData.idWeather = idWeather
+      // Обновляем температуру.
+      formData.temperature = weatherByAPI.temperature
+      messageResultWeatherAPI.value = 'Обновлено'
+    } else {
+      messageResultWeatherAPI.value = 'Ошибка'
+      console.error(`Ошибка при запросе погоды по API: ${weatherByAPI.description}`)
+    }
+  } else {
+    messageResultWeatherAPI.value = 'Ошибка'
+    console.error('По /api/weather вернулось пустое значение.')
+  }
+  // Убираем флаг.
+  pendingDataFromWeatherAPI.value = false
+}
+// Включает/отключает элементы в формею
 function disableCalculatedElements(status: boolean): void {
   formAddIsShown.value = status
 }
@@ -136,13 +186,43 @@ function clearForm(): void {
         v-model="formData.heartrate"
       />
     </div>
-    <div class="form-add__item">
-      <div class="form-add__item-title">Температура:</div>
-      <InputNumber :min="-40" :max="60" v-model="formData.temperature" />
-    </div>
-    <div class="form-add__item">
-      <div class="form-add__item-title">Погода:</div>
-      <CarouselSimple :items="weatherList" v-model="formData.idWeather" />
+    <div class="form-add__item form-add__item_weather">
+      <div class="flex flex_column">
+        <div class="form-add__item">
+          <div class="form-add__item-title">Температура:</div>
+          <InputNumber
+            :min="-40"
+            :max="60"
+            :disabled="pendingDataFromWeatherAPI"
+            v-model="formData.temperature"
+          />
+        </div>
+        <div class="form-add__item">
+          <div class="form-add__item-title">Погода:</div>
+          <CarouselSimple
+            :items="weatherList"
+            :disabled="pendingDataFromWeatherAPI"
+            v-model="formData.idWeather"
+          />
+        </div>
+      </div>
+      <div class="flex flex_column">
+        <button
+          class="button button_blue"
+          @click="getWeather"
+          :disabled="pendingDataFromWeatherAPI"
+        >
+          <Icon
+            :name="pendingDataFromWeatherAPI ? 'svg-spinners:clock' : 'material-symbols:refresh-rounded'"
+            size="1.25rem"
+          />
+          <span>{{ pendingDataFromWeatherAPI ? 'Ожидание' : 'Обновить' }}</span>
+        </button>
+        <p
+          class="form-add__message"
+          :class="`color_${messageResultWeatherAPI === 'Ошибка' ? 'red' : 'green'}`"
+        >{{ messageResultWeatherAPI }}</p>
+      </div>
     </div>
     <div class="form-add__item">
       <div class="form-add__item-title">Каденс:</div>
@@ -200,10 +280,27 @@ function clearForm(): void {
     @media (--viewport-sm) {
       flex-direction: row;
       gap: 0;
+      width: fit-content;
     }
 
     & + & {
       margin-top: var(--indent);
+    }
+
+    &_weather {
+      border: var(--border);
+      border-radius: var(--border-radius);
+      padding: var(--indent);
+      gap: var(--indent);
+
+      .button {
+        width: 8.25rem;
+      }
+
+      .form-add__message {
+        text-align: center;
+        margin-top: .5rem;
+      }
     }
   }
 
@@ -216,7 +313,7 @@ function clearForm(): void {
   }
 
   &__message {
-    min-height: 1rem;
+    min-height: 1.5rem;
   }
 
   &__buttons {
