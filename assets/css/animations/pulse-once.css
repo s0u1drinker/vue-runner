@@ -1,0 +1,22 @@
+@keyframes pulse-once {
+  0% { box-shadow: 0 0 0 0 var(--pulse-color); }
+  100% { box-shadow: 0 0 0 .5rem transparent; }
+}
+
+.animation {
+
+  &_pulse-once {
+    --pulse-color: var(--gray);
+
+    animation: pulse-once 1.5s ease-out;
+    border-radius: .25rem;
+
+    &_red {
+      --pulse-color: var(--red);
+    }
+
+    &_green {
+      --pulse-color: var(--green);
+    }
+  }
+}

@@ -28,10 +28,17 @@ const formData = reactive<Workout>({
   comment: '',
   laps: <Lap[]>[],
 })
+// Возможные сообщения при работе API.
+const resultMessages: { [ key: string ]: string } = {
+  error: 'Ошибка',
+  success: 'Обновлено'
+}
 // Синхронизируем дату между клиентом и сервером.
 const today = useState('today', () => new Date())
 // Асинхронный запрос о погоде.
 const { fetchWeather } = useWeather()
+// Эффект пульсации после обновления данных (о погоде).
+const { isAnimationInProgress, startAnimation, onAnimationEnd, animationClasses } = useAnimation('pulse-once')
 // Сообщение об ошибке/успешной отправке.
 const message = ref<string>('')
 // Флаг запроса данных о погоде по API.
@@ -40,6 +47,8 @@ const pendingDataFromWeatherAPI = ref<boolean>(false)
 const messageResultWeatherAPI = ref<string>('')
 // Флаг статуса показа формы добавления нового круга.
 const formAddIsShown = ref<boolean>(false)
+// Таймер для работы с показом сообщения.
+const idTimeout = ref<ReturnType<typeof setTimeout>>()
 // Флаг расчёта данных на основе информации о кругах:
 // если пользователь добавил данные о кругах, то некоторые показатели расчитываются автоматически.
 const calculationByLaps = computed<boolean>((): boolean => formAddIsShown.value || Boolean(formData.laps.length))
@@ -67,8 +76,10 @@ watch(formData.laps, () => {
 })
 // Очищаем строку с результатом запроса погоды по API.
 watch(messageResultWeatherAPI, () => {
+  clearTimeout(idTimeout.value)
+
   if(messageResultWeatherAPI.value) {
-    setTimeout(() => messageResultWeatherAPI.value = '', 3000)
+    idTimeout.value = setTimeout(() => messageResultWeatherAPI.value = '', 3000)
   }
 })
 
@@ -94,13 +105,16 @@ async function getWeather(): Promise<void> {
       if (idWeather) formData.idWeather = idWeather
       // Обновляем температуру.
       formData.temperature = weatherByAPI.temperature
-      messageResultWeatherAPI.value = 'Обновлено'
+      messageResultWeatherAPI.value = resultMessages.success
+      startAnimation('success')
     } else {
-      messageResultWeatherAPI.value = 'Ошибка'
+      messageResultWeatherAPI.value = resultMessages.error
+      startAnimation('error')
       console.error(`Ошибка при запросе погоды по API: ${weatherByAPI.description}`)
     }
   } else {
-    messageResultWeatherAPI.value = 'Ошибка'
+    messageResultWeatherAPI.value = resultMessages.error
+    startAnimation('error')
     console.error('По /api/weather вернулось пустое значение.')
   }
   // Убираем флаг.
@@ -191,17 +205,21 @@ function clearForm(): void {
         <div class="form-add__item">
           <div class="form-add__item-title">Температура:</div>
           <InputNumber
+            :class="animationClasses"
             :min="-40"
             :max="60"
             :disabled="pendingDataFromWeatherAPI"
+            @animationend="onAnimationEnd"
             v-model="formData.temperature"
           />
         </div>
         <div class="form-add__item">
           <div class="form-add__item-title">Погода:</div>
           <CarouselSimple
+            :class="animationClasses"
             :items="weatherList"
             :disabled="pendingDataFromWeatherAPI"
+            @animationend="onAnimationEnd"
             v-model="formData.idWeather"
           />
         </div>
@@ -210,7 +228,7 @@ function clearForm(): void {
         <button
           class="button button_blue"
           @click="getWeather"
-          :disabled="pendingDataFromWeatherAPI"
+          :disabled="pendingDataFromWeatherAPI || isAnimationInProgress"
         >
           <Icon
             :name="pendingDataFromWeatherAPI ? 'svg-spinners:clock' : 'material-symbols:refresh-rounded'"
@@ -220,7 +238,7 @@ function clearForm(): void {
         </button>
         <p
           class="form-add__message"
-          :class="`color_${messageResultWeatherAPI === 'Ошибка' ? 'red' : 'green'}`"
+          :class="`color_${messageResultWeatherAPI === resultMessages.error ? 'red' : 'green'}`"
         >{{ messageResultWeatherAPI }}</p>
       </div>
     </div>
