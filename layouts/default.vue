@@ -5,6 +5,7 @@
   <main class="default-layout">
     <slot></slot>
   </main>
+  <NotificationContainer />
 </template>
 
 <style scoped>

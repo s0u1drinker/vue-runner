@@ -6,6 +6,7 @@ import type { WeatherByAPI } from '@/types/weatherByAPI'
 // TODO: Объединить с компонентом <FormEditLap>.
 
 const weatherStore = useWeatherStore()
+const notificationStore = useNotificationStore()
 
 const activityList = storeToRefs(useActivityStore()).getActivitiesForSelect
 const weatherList = storeToRefs(weatherStore).getWeatherListForSelect
@@ -84,10 +85,10 @@ watch(messageResultWeatherAPI, () => {
 })
 
 onMounted(() => {
-  getWeather()
+  getWeather(true)
 })
 // Запрос погоды.
-async function getWeather(): Promise<void> {
+async function getWeather(isInitialLoad: boolean = false): Promise<void> {
   let weatherByAPI: WeatherByAPI | null = null
   // Сбрасываем текущие данные и поднимаем флаг запроса.
   formData.temperature = 0
@@ -105,16 +106,33 @@ async function getWeather(): Promise<void> {
       if (idWeather) formData.idWeather = idWeather
       // Обновляем температуру.
       formData.temperature = weatherByAPI.temperature
+      // Вывод текста.
       messageResultWeatherAPI.value = resultMessages.success
+      // Анимация.
       startAnimation('success')
+      // Если функция запускается по клику на кнопке, то показываем уведомление.
+      if (!isInitialLoad) {
+        notificationStore.addNotification({
+          type: 'success',
+          text: 'Данные о погоде обновлены.',
+        })
+      }
     } else {
       messageResultWeatherAPI.value = resultMessages.error
       startAnimation('error')
+      notificationStore.addNotification({
+        type: 'error',
+        text: 'Сервер недоступен.',
+      })
       console.error(`Ошибка при запросе погоды по API: ${weatherByAPI.description}`)
     }
   } else {
     messageResultWeatherAPI.value = resultMessages.error
     startAnimation('error')
+    notificationStore.addNotification({
+      type: 'error',
+      text: 'Неизвестная ошибка. Попробуйте ещё раз.',
+    })
     console.error('По /api/weather вернулось пустое значение.')
   }
   // Убираем флаг.
@@ -227,7 +245,7 @@ function clearForm(): void {
       <div class="flex flex_column">
         <button
           class="button button_blue"
-          @click="getWeather"
+          @click="getWeather()"
           :disabled="pendingDataFromWeatherAPI || isAnimationInProgress"
         >
           <Icon
@@ -275,7 +293,6 @@ function clearForm(): void {
       <button type="submit" class="button button_blue" @click="sendForm">Сохранить</button>
     </div>
   </form>
-  <pre>{{ formData }}</pre>
 </template>
 
 <style scoped>
