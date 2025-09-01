@@ -24,6 +24,18 @@ export const useWorkoutStore = defineStore('workout', {
         return state.workouts.find((workout) => workout.id === idWorkout)
       }
     },
+    /**
+     * Сравнивает даты тренировок в хранилище с переданной датой и возвращает идентификатор или null.
+     * @param dateToCheck Дата в виде строки.
+     * @returns Идентификатор/null.
+     */
+    getWorkoutForTheDay: (state) => {
+      return (dateToCheck: string): string | null => {
+        const workoutOnDate: Workout | undefined = state.workouts.find((workout) => isTwoDateAreTheSame(dateToCheck, workout.dateStart))
+
+        return workoutOnDate?.id ?? null
+      }
+    }
   },
   actions: {
     /**
@@ -45,8 +57,11 @@ export const useWorkoutStore = defineStore('workout', {
         if (typeof idWorkout === 'string' && idWorkout.length > 0) {
           if (workout && typeof workout === 'object' && Object.keys(workout).length !== 0) {
             const docRef = doc(useFirestore(), 'workout', idWorkout)
+            const workoutIndex = this.workouts.findIndex((workout) => workout.id === idWorkout)
+            const { id, ...workoutData } = workout
 
-            await updateDoc(docRef, workout)
+            await updateDoc(docRef, workoutData)
+            this.workouts[workoutIndex] = { id: idWorkout, ...workoutData }
             updateResult = true
           } else {
             console.error(`Отсутствуют данные о тренировке: ${workout}.`)

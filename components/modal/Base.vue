@@ -55,21 +55,21 @@ const handleClick = (event: MouseEvent) => {
 
 <template>
   <Teleport to="body">
-    <dialog ref="dialog" class="m-dialog" @click="handleClick">
-      <div class="m-dialog__inner">
+    <dialog ref="dialog" class="modal" @click="handleClick">
+      <div class="modal__inner">
         <button
-          class="button button_red m-dialog__close-button"
+          class="button button_red modal__close-button"
           aria-label="Закрыть"
           @click="closeModal(id)"
           v-if="closable"
         >
           <Icon name="material-symbols:close-small-outline-rounded" size="1.5rem" />
         </button>
-        <h2 class="m-dialog__header" v-if="header">{{ header }}</h2>
-        <div class="m-dialog__body" v-if="$slots.body">
+        <h2 class="modal__header" v-if="header">{{ header }}</h2>
+        <div class="modal__body" v-if="$slots.body">
           <slot name="body"></slot>
         </div>
-        <div class="m-dialog__buttons" v-if="$slots.buttons">
+        <div class="modal__buttons" v-if="$slots.buttons">
           <slot name="buttons"></slot>
         </div>
       </div>
@@ -104,7 +104,7 @@ const handleClick = (event: MouseEvent) => {
   }
 }
 
-.m-dialog {
+.modal {
   --speed: .35s;
 
   transition: display var(--speed) allow-discrete, overlay var(--speed) allow-discrete;
@@ -154,6 +154,10 @@ const handleClick = (event: MouseEvent) => {
     box-shadow: var(--shadow);
     padding: 0;
     border-color: var(--white);
+  }
+
+  &__header {
+    text-align: center;
   }
 
   &__buttons {

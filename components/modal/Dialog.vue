@@ -28,4 +28,8 @@ const { options } = defineProps<{ options: ModalDialog }>()
   </ModalBase>
 </template>
 
-<style scoped></style>
+<style scoped>
+.button {
+  min-width: 4rem;
+}
+</style>

@@ -318,3 +318,23 @@ export function calculatePace(distance: number, time: string): string {
 
   return paceToReturn
 }
+/**
+ * Сравнивает две даты в формате ДД.ММ.ГГГГ.
+ * @param date1 Дата в виде строки.
+ * @param date2 Дата в виде строки.
+ * @returns Результат сравнения.
+ */
+export function isTwoDateAreTheSame(date1: string, date2: string): boolean {
+  let resultCompare = false
+
+  if (typeof date1 === 'string' && typeof date2 === 'string') {
+    const date1Date = prettyDate(date1).date
+    const date2Date = prettyDate(date2).date
+
+    if (date1Date !== '-' && date2Date !== '-') {
+      resultCompare = date1Date === date2Date
+    } else console.error(`Не удалось сравнить даты ${date1Date} и ${date2Date}.`)
+  } else console.error(`Неверный тип параметра(ов) функции. Ожидались строки.`)
+
+  return resultCompare
+}

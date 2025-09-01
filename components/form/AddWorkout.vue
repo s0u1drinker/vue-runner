@@ -6,19 +6,20 @@ import type { WeatherByAPI } from '@/types/weatherByAPI'
 type WorkoutField = keyof Workout
 
 // TODO: Объединить с компонентом <FormEditLap>.
-// TODO: Необходимо проверять пересечение тренировок (время одной тренировки не должно накладываться на время другой).
 // TODO: Обновление целей.
 
 const weatherStore = useWeatherStore()
 const notificationStore = useNotificationStore()
-const { addWorkoutInDB } = useWorkoutStore()
-const { addModalLoader, openModal, closeModal } = useModalStore()
+const { addWorkoutInDB, updateWorkoutInDB, getWorkoutForTheDay } = useWorkoutStore()
+const { addModalLoader, addModalDialog, openModal, closeModal } = useModalStore()
 
 const activityList = storeToRefs(useActivityStore()).getActivitiesForSelect
 const weatherList = storeToRefs(weatherStore).getWeatherListForSelect
 
-// Идентификатор модального окна.
-const idModal = ref<string>('')
+// Идентификатор модального окна при сохранении данных.
+const idModalLoader = ref<string>('')
+// Идентификатор модального окна, если найдена тренировка за указанный день.
+const idModalDialog = ref<string>('')
 // Данные о тренировке.
 const formData = reactive<Workout>({
   id: '',
@@ -134,7 +135,7 @@ watch(messageResultWeatherAPI, () => {
 
 onMounted(() => {
   getWeather(true)
-  idModal.value = addModalLoader('svg-spinners:12-dots-scale-rotate', 'Отправляем данные...')
+  idModalLoader.value = addModalLoader('svg-spinners:12-dots-scale-rotate', 'Отправляем данные...')
 })
 // Запрос погоды.
 async function getWeather(isInitialLoad: boolean = false): Promise<void> {
@@ -192,7 +193,7 @@ function disableCalculatedElements(status: boolean): void {
   formAddIsShown.value = status
 }
 // Отправка формы.
-async function submitForm(): Promise<void> {
+function submitForm(): void {
   messageResultSubmitForm.value = ''
   checkFormBeforeSubmit.value = true
 
@@ -215,27 +216,71 @@ async function submitForm(): Promise<void> {
       break
     }
   }
-  // Если нет сообщения об ошибке, пробуем сохранить в БД.
+  // Если нет сообщения об ошибке, то пробуем сохранить в БД.
   if (!messageResultSubmitForm.value) {
-    if (idModal.value) {
-      openModal(idModal.value)
-      const { result, idWorkout } = await addWorkoutInDB(formData)
+    if (idModalLoader.value) {
+      // Проверяем есть ли в хранилище информация о тренировке за указанную дату.
+      const idWorkout = getWorkoutForTheDay(formData.dateStart)
 
-      if (result) {
-        // Добавлено успешно - редирект на страницу с тренировкой.
-        navigateTo({
-          path: `/workout/${idWorkout}`,
-          query: {
-            // Передаём идентификатор модального окна, которое нужно закрыть.
-            idModal: idModal.value
+      if (idWorkout) {
+        // Если есть - выводим диалоговое модальное окно.
+        idModalDialog.value = addModalDialog(
+          'Дата тренировки',
+          `За указанную дату ${prettyDate(formData.dateStart).date} уже есть тренировка. Обновить данные?`,
+          {
+            close: {
+              title: 'Нет',
+            },
+            confirm: {
+              title: 'Да',
+              action: buttonConfirmInModalDialog.bind(null, idWorkout),
+            },
           }
-        })
+        )
+        openModal(idModalDialog.value)
+        checkFormBeforeSubmit.value = false
       } else {
-        // Какая-то ошибка при добавлении.
-        messageResultSubmitForm.value = 'Ошибка при работе с БД.'
-        closeModal(idModal.value)
+        saveWorkoutToDB()
       }
+      
     } else console.error('Пустой идентификатор модального окна.')
+  }
+}
+/**
+ * Нажатие на кнопку "Да" в диалоговом модальном окне.
+ * @param idWorkout Идентификатор тренировки.
+ */
+function buttonConfirmInModalDialog(idWorkout: string) {
+  closeModal(idModalDialog.value)
+  saveWorkoutToDB(idWorkout)
+}
+/**
+ * Сохранение данных в БД. Если передан идентификатор тренировки, то обновляется запись, иначе добавляется новая.
+ * @param idWorkoutToUpd Идентификатор тренировки (если нужно обновить).
+ */
+async function saveWorkoutToDB(idWorkoutToUpd?: string): Promise<void> {
+  openModal(idModalLoader.value)
+
+  const { result, idWorkout } = (idWorkoutToUpd && typeof idWorkoutToUpd === 'string')
+    ? {
+        result: await updateWorkoutInDB(idWorkoutToUpd, formData),
+        idWorkout: idWorkoutToUpd
+      }
+    : await addWorkoutInDB(formData)
+
+  if (result) {
+    // Добавлено успешно - редирект на страницу с тренировкой.
+    navigateTo({
+      path: `/workout/${idWorkout}`,
+      query: {
+        // Передаём идентификатор модального окна, которое нужно закрыть.
+        idModal: idModalLoader.value
+      }
+    })
+  } else {
+    // Какая-то ошибка при добавлении.
+    messageResultSubmitForm.value = 'Ошибка при работе с БД.'
+    closeModal(idModalLoader.value)
   }
 }
 // Очистка формы.

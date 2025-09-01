@@ -17,8 +17,8 @@ export type ModalDialog = Modal & {
   header: string,
   closable: true,
   buttons: {
-    confirm: ModalButton,
     close: ModalButton,
+    confirm: ModalButton,
   },
 }
 
