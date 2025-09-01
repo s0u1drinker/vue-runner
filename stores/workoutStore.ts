@@ -1,8 +1,13 @@
 import { defineStore } from 'pinia'
 import { useFirestore } from 'vuefire'
-import { doc, updateDoc } from 'firebase/firestore'
+import { doc, updateDoc, collection, addDoc } from 'firebase/firestore'
 import { getDataFromDB } from './utils/dataFromDB'
 import type { Workout } from '@/types/workout'
+
+type AddWorkoutResult = {
+  result: boolean,
+  idWorkout: string
+}
 
 export const useWorkoutStore = defineStore('workout', {
   state: () => ({
@@ -54,6 +59,34 @@ export const useWorkoutStore = defineStore('workout', {
       }
 
       return updateResult
+    },
+    /**
+     * Добавление данных о новой тренировке в БД.
+     * @param workout Данные о тренировке.
+     * @returns Результат добавления.
+     */
+    async addWorkoutInDB(workout: Workout): Promise<AddWorkoutResult> {
+      const collectionRef = collection(useFirestore(), 'workout')
+      const { id, ...workoutData } = workout
+      let addResult: AddWorkoutResult = {
+        result: false,
+        idWorkout: '',
+      }
+
+      await addDoc(collectionRef, workoutData)
+      .then((docRef) => {
+        workout.id = docRef.id
+        // Добавляем в хранилище.
+        this.workouts.push(workout)
+        // Завершаем выполнение.
+        addResult.result = true
+        addResult.idWorkout = docRef.id
+      })
+      .catch((err) => {
+        console.error(`Произошла ошибка при добавлении данных в БД: ${err}`)
+      })
+
+      return addResult
     }
   }
 })

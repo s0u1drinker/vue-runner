@@ -3,14 +3,23 @@ import type { Workout } from '@/types/workout'
 import type { Lap } from '@/types/lap'
 import type { WeatherByAPI } from '@/types/weatherByAPI'
 
+type WorkoutField = keyof Workout
+
 // TODO: Объединить с компонентом <FormEditLap>.
+// TODO: Необходимо проверять пересечение тренировок (время одной тренировки не должно накладываться на время другой).
+// TODO: Обновление целей.
 
 const weatherStore = useWeatherStore()
 const notificationStore = useNotificationStore()
+const { addWorkoutInDB } = useWorkoutStore()
+const { addModalLoader, openModal, closeModal } = useModalStore()
 
 const activityList = storeToRefs(useActivityStore()).getActivitiesForSelect
 const weatherList = storeToRefs(weatherStore).getWeatherListForSelect
 
+// Идентификатор модального окна.
+const idModal = ref<string>('')
+// Данные о тренировке.
 const formData = reactive<Workout>({
   id: '',
   trainingTime: '',
@@ -29,6 +38,43 @@ const formData = reactive<Workout>({
   comment: '',
   laps: <Lap[]>[],
 })
+const rulesToCheck = reactive<{ [key: string]: { cl: null | string[], isBadValue: () => boolean, errorText: string }}>({
+  idActivity: {
+    cl: null,
+    isBadValue: (): boolean => !formData.idActivity,
+    errorText: 'Необходимо выбрать активность.',
+  },
+  distance: {
+    cl: null,
+    isBadValue: (): boolean => (formData.distance <= 0),
+    errorText: 'Неверно указана дистанция.',
+  },
+  trainingTime: {
+    cl: null,
+    isBadValue: (): boolean => !formData.trainingTime || (formData.trainingTime === '00:00:00'),
+    errorText: 'Укажите время тренировки.',
+  },
+  averagePace: {
+    cl: null,
+    isBadValue: (): boolean => !formData.averagePace || (formData.averagePace === '00:00'),
+    errorText: 'Укажите средний темп.',
+  },
+  heartrate: {
+    cl: null,
+    isBadValue: (): boolean => (formData.heartrate <= 0),
+    errorText: 'Укажите пульс.',
+  },
+  weightBefore: {
+    cl: null,
+    isBadValue: (): boolean => (formData.weightBefore <= 0),
+    errorText: 'Укажите вес до тренировки.',
+  },
+  weightAfter: {
+    cl: null,
+    isBadValue: (): boolean => (formData.weightAfter <= 0),
+    errorText: 'Укажите вес после тренировки.',
+  },
+})
 // Возможные сообщения при работе API.
 const resultMessages: { [ key: string ]: string } = {
   error: 'Ошибка',
@@ -41,13 +87,15 @@ const { fetchWeather } = useWeather()
 // Эффект пульсации после обновления данных (о погоде).
 const { isAnimationInProgress, startAnimation, onAnimationEnd, animationClasses } = useAnimation('pulse-once')
 // Сообщение об ошибке/успешной отправке.
-const message = ref<string>('')
+const messageResultSubmitForm = ref<string>('')
 // Флаг запроса данных о погоде по API.
 const pendingDataFromWeatherAPI = ref<boolean>(false)
 // Результат обновления данных о погоде по API.
 const messageResultWeatherAPI = ref<string>('')
 // Флаг статуса показа формы добавления нового круга.
 const formAddIsShown = ref<boolean>(false)
+// Флаг проверки формы.
+const checkFormBeforeSubmit = ref<boolean>(false)
 // Таймер для работы с показом сообщения.
 const idTimeout = ref<ReturnType<typeof setTimeout>>()
 // Флаг расчёта данных на основе информации о кругах:
@@ -86,6 +134,7 @@ watch(messageResultWeatherAPI, () => {
 
 onMounted(() => {
   getWeather(true)
+  idModal.value = addModalLoader('svg-spinners:12-dots-scale-rotate', 'Отправляем данные...')
 })
 // Запрос погоды.
 async function getWeather(isInitialLoad: boolean = false): Promise<void> {
@@ -122,7 +171,7 @@ async function getWeather(isInitialLoad: boolean = false): Promise<void> {
       startAnimation('error')
       notificationStore.addNotification({
         type: 'error',
-        text: 'Сервер недоступен.',
+        text: 'Сервер погоды недоступен.',
       })
       console.error(`Ошибка при запросе погоды по API: ${weatherByAPI.description}`)
     }
@@ -143,21 +192,64 @@ function disableCalculatedElements(status: boolean): void {
   formAddIsShown.value = status
 }
 // Отправка формы.
-function sendForm(): void {
-  message.value = 'Форма будет отправлена... не сейчас.'
+async function submitForm(): Promise<void> {
+  messageResultSubmitForm.value = ''
+  checkFormBeforeSubmit.value = true
+
+  // Начинаем проверять поля формы.
+  for (let elementName in rulesToCheck) {
+    // Проверяем значение.
+    if (rulesToCheck[elementName].isBadValue()) {
+      // Если вернулась ошибка, то вешаем классы.
+      rulesToCheck[elementName].cl = [ 'animation_pulse', 'animation_pulse_red' ]
+      // Выводим сообщение об ошибке.
+      messageResultSubmitForm.value = rulesToCheck[elementName].errorText
+      // Навешиваем временный watch, который при изменении некорректного значения
+      const e = watch(() => formData[elementName as WorkoutField], () => {
+        // очистит классы
+        rulesToCheck[elementName].cl = null
+        // и самоустранится.
+        e()
+      })
+      checkFormBeforeSubmit.value = false
+      break
+    }
+  }
+  // Если нет сообщения об ошибке, пробуем сохранить в БД.
+  if (!messageResultSubmitForm.value) {
+    if (idModal.value) {
+      openModal(idModal.value)
+      const { result, idWorkout } = await addWorkoutInDB(formData)
+
+      if (result) {
+        // Добавлено успешно - редирект на страницу с тренировкой.
+        navigateTo({
+          path: `/workout/${idWorkout}`,
+          query: {
+            // Передаём идентификатор модального окна, которое нужно закрыть.
+            idModal: idModal.value
+          }
+        })
+      } else {
+        // Какая-то ошибка при добавлении.
+        messageResultSubmitForm.value = 'Ошибка при работе с БД.'
+        closeModal(idModal.value)
+      }
+    } else console.error('Пустой идентификатор модального окна.')
+  }
 }
 // Очистка формы.
 function clearForm(): void {
-  message.value = 'Форма будет очищена... скоро.'
+  messageResultSubmitForm.value = 'Форма будет очищена... скоро.'
 }
 </script>
 
 <template>
   <form class="form-add" @submit.prevent @keydown.enter.stop>
-    <p class="form-add__temp-message">Извините, данная форма ещё в разработке.</p>
     <div class="form-add__item">
       <div class="form-add__item-title">Активность:</div>
       <SelectCustom
+        :class="rulesToCheck.idActivity.cl"
         :list="activityList"
         v-model="formData.idActivity"
       />
@@ -189,6 +281,7 @@ function clearForm(): void {
     <div class="form-add__item">
       <div class="form-add__item-title">Дистанция (км):</div>
       <InputNumber
+        :class="rulesToCheck.distance.cl"
         :float="2"
         :min="0"
         :disabled="calculationByLaps"
@@ -198,6 +291,7 @@ function clearForm(): void {
     <div class="form-add__item">
       <div class="form-add__item-title">Время:</div>
       <InputTime
+        :class="rulesToCheck.trainingTime.cl"
         :disabled="calculationByLaps"
         v-model:time="formData.trainingTime"
       />
@@ -205,6 +299,7 @@ function clearForm(): void {
     <div class="form-add__item">
       <div class="form-add__item-title">Средний темп:</div>
       <InputTime
+        :class="rulesToCheck.averagePace.cl"
         :showHours="false"
         :disabled="calculationByLaps"
         v-model:time="formData.averagePace"
@@ -213,6 +308,7 @@ function clearForm(): void {
     <div class="form-add__item">
       <div class="form-add__item-title">Пульс:</div>
       <InputNumber
+        :class="rulesToCheck.heartrate.cl"
         :min="0"
         :disabled="calculationByLaps"
         v-model="formData.heartrate"
@@ -270,11 +366,23 @@ function clearForm(): void {
     </div>
     <div class="form-add__item">
       <div class="form-add__item-title">Вес до:</div>
-      <InputNumber :float="1" :min="0" :step="0.1" v-model="formData.weightBefore" />
+      <InputNumber
+        :class="rulesToCheck.weightBefore.cl"
+        :float="1"
+        :min="0"
+        :step="0.1"
+        v-model="formData.weightBefore"
+      />
     </div>
     <div class="form-add__item">
       <div class="form-add__item-title">Вес после:</div>
-      <InputNumber :float="1" :min="0" :step="0.1" v-model="formData.weightAfter" />
+      <InputNumber
+        :class="rulesToCheck.weightAfter.cl"
+        :float="1"
+        :min="0"
+        :step="0.1"
+        v-model="formData.weightAfter"
+      />
     </div>
     <div class="form-add__item">
       <div class="form-add__item-title">Комментарий:</div>
@@ -286,11 +394,20 @@ function clearForm(): void {
       />
     </div>
     <div class="form-add__item">
-      <p class="form-add__message">{{ message }}</p>
+      <p class="form-add__message color_red">{{ messageResultSubmitForm }}</p>
     </div>
     <div class="form-add__item form-add__buttons">
-      <button class="button button_outline_gray" @click="clearForm">Очистить</button>
-      <button type="submit" class="button button_blue" @click="sendForm">Сохранить</button>
+      <button
+        class="button button_outline_gray"
+        @click="clearForm"
+        :disabled="checkFormBeforeSubmit"
+      >Очистить</button>
+      <button
+        type="submit"
+        class="button button_blue"
+        @click="submitForm"
+        :disabled="checkFormBeforeSubmit"
+      >Сохранить</button>
     </div>
   </form>
 </template>
@@ -300,11 +417,6 @@ function clearForm(): void {
 
 .form-add {
   margin-top: var(--indent-double);
-
-  &__temp-message {
-    color: var(--red);
-    margin-bottom: var(--indent-double);
-  }
 
   &__item {
     display: flex;

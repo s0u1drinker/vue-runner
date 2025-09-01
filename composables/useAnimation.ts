@@ -2,7 +2,7 @@ type AnimationClasses = {
   [key: string]: boolean,
 }
 
-type Animations = [ 'pulse-once' ]
+type Animations = [ 'pulse-once', 'pulse' ]
 type Colors = ['error', 'success']
 type ColorKeys = Colors[number]
 
@@ -16,6 +16,7 @@ export function useAnimation(animation: Animations[number]) {
   // Возможные наименования анимаций.
   const ANIMATIONS_MAP: ReadonlyMap<Animations[number], string> = new Map([
     ['pulse-once', 'pulse-once'],
+    ['pulse', 'pulse'],
   ])
   // Возможные наименования цветов.
   const COLORS_MAP: ReadonlyMap<ColorKeys, string> = new Map([

@@ -1,41 +1,54 @@
 <script setup lang="ts">
-
-// TODO: Создание модальных окон (МО) через Pinia.
-// TODO: Компонент ModalContainer со всеми МО в #app.
-
-const { header } = defineProps<{
+const { header, closable, id } = defineProps<{
   header?: string,
+  closable: boolean,
+  id: string,
 }>()
 
-// Данные о модальном окне из store.
 const modalStore = useModalStore()
+const { getModalDataByID, closeModal } = modalStore
 // Элемент <dialog>.
 const dialogRef = useTemplateRef<HTMLDialogElement>('dialog')
-// Наблюдаем за хранилищем.
-watch(modalStore, () => {
-  if (dialogRef.value) {
+// Данные о модальном окне из store.
+const modalData = computed(() => getModalDataByID(id))
+// Отмена закрытия окна при нажатии на клавишу Esc.
+const closeDialogOnKeyEscape = (e: KeyboardEvent) => {
+  if (e.key === 'Escape') {
+    e.preventDefault()
+  }
+}
+// Наблюдаем.
+watchEffect(() => {
+  if (dialogRef.value && modalData.value) {
     // Если состояние флага изменилось - закрываем/открываем окно.
-    modalStore.modalShow ? dialogRef.value.showModal() : dialogRef.value.close()
+    modalData.value.show ? dialogRef.value.showModal() : dialogRef.value.close()
   }
 })
 
 onMounted(() => {
-  if (dialogRef.value) {
-    // Слушаем событие "Cancel", чтобы правильно закрыть окно при нажатии кнопки Esc.
-    dialogRef.value.addEventListener('cancel', modalStore.closeModalDialog)
+  if (dialogRef.value && modalData.value) {
+    // Слушаем событие "Cancel", чтобы правильно закрыть окно.
+    dialogRef.value.addEventListener('cancel', () => closeModal(id))
+    // Если пользователь лишен возможности закрывать окно.
+    if (!closable) {
+      // Вешаем обработчик на клавишу Esc.
+      dialogRef.value.addEventListener('keydown', closeDialogOnKeyEscape)
+    }
   }
 })
 
 onUnmounted(() => {
-  if (dialogRef.value) {
-    dialogRef.value.removeEventListener('cancel', modalStore.closeModalDialog)
+  // Немножко приберёмся за собой.
+  if (dialogRef.value && modalData.value) {
+    dialogRef.value.removeEventListener('cancel', () => closeModal(id))
+    dialogRef.value.removeEventListener('keydown', closeDialogOnKeyEscape)
   }
 })
 // Обрабатываем клик по модальному окну.
 const handleClick = (event: MouseEvent) => {
   // Клик по оверлею закрывает модальное окно.
   if (event.target === dialogRef.value) {
-    modalStore.closeModalDialog()
+    closeModal(id)
   }
 }
 </script>
@@ -44,7 +57,12 @@ const handleClick = (event: MouseEvent) => {
   <Teleport to="body">
     <dialog ref="dialog" class="m-dialog" @click="handleClick">
       <div class="m-dialog__inner">
-        <button class="button button_red m-dialog__close-button" aria-label="Закрыть" @click="modalStore.closeModalDialog()">
+        <button
+          class="button button_red m-dialog__close-button"
+          aria-label="Закрыть"
+          @click="closeModal(id)"
+          v-if="closable"
+        >
           <Icon name="material-symbols:close-small-outline-rounded" size="1.5rem" />
         </button>
         <h2 class="m-dialog__header" v-if="header">{{ header }}</h2>
@@ -99,15 +117,16 @@ const handleClick = (event: MouseEvent) => {
   width: 90%;
 
   @media (--viewport-sm) {
-    width: 70%;
+    max-width: 70%;
+    width: fit-content;
   }
 
   @media (--viewport-md) {
-    width: 55%;
+    max-width: 55%;
   }
 
   @media (--viewport-lg) {
-    width: 40%;
+    max-width: 40%;
   }
 
   &::backdrop {

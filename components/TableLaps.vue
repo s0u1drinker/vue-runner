@@ -61,6 +61,10 @@ const computedLaps = computed(() => {
   }
 })
 
+const addLapsData = () => {
+  alert('soon...')
+}
+
 /**
  * Возвращает соответствующий класс для медленного и быстрого кругов.
  * @param pace Темп.
@@ -112,7 +116,7 @@ function checkClass(pace: string): string | null {
           <td :colspan="theadList.length">
             <div class="t-laps__box_no-data">
               <p>Нет данных.</p>
-              <button class="button button_blue">Добавить</button>
+              <button class="button button_blue" @click="addLapsData">Добавить</button>
             </div>
           </td>
         </tr>

@@ -2,7 +2,8 @@
 import type { Lap } from '@/types/lap'
 
 // TODO: Объединить с компонентом <FormAddWorkout>.
-// TODO: Пересчёт темпа при измененнии дистанции круга.
+
+const { addModalDialog, openModal, closeModal } = useModalStore()
 
 const { lap, lapDistance } = defineProps<{
   lap: Lap,
@@ -13,6 +14,20 @@ const emit = defineEmits<{
   cancel: [],
   save: [lap: Lap]
 }>()
+
+const idModal = addModalDialog(
+  'Не указан пульс',
+  'Значение пульса равно "0". Пульсомер сломался или кто-то забыл указать самый важный параметр?',
+  {
+    confirm: {
+      title: 'Всё верно',
+      action: emitSave,
+    },
+    close: {
+      title: 'Да, забыл!',
+    },
+  }
+)
 
 const modalStore = useModalStore()
 // Количество секунд общего времени при инициализации.
@@ -55,14 +70,14 @@ function saveForm() {
         emitSave()
       } else {
         errMessage.value = 'Не указан пульс.'
-        modalStore.openModalDialog()
+        openModal(idModal)
       }
     } else errMessage.value = 'Укажите время круга.'
   } else errMessage.value = 'Укажите дистанцию круга.'
 }
 // Генерирует событие сохранения данных о круге.
 function emitSave() {
-  modalStore.closeModalDialog()
+  closeModal(idModal)
   emit('save', currentLapValue)
 }
 </script>
@@ -100,15 +115,6 @@ function emitSave() {
       </div>
     </div>
   </div>
-  <ModalDialog>
-    <template #body>
-      <p>Значение пульса равно "0". Пульсомер сломался или кто-то забыл указать самый важный параметр?</p>
-    </template>
-    <template #buttons>
-      <button class="button button_outline_gray" @click="modalStore.closeModalDialog()">Да, забыл!</button>
-      <button class="button button_blue" @click="emitSave()">Всё верно</button>
-    </template>
-  </ModalDialog>
 </template>
 
 <style scoped>

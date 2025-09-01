@@ -6,6 +6,7 @@
     <slot></slot>
   </main>
   <NotificationContainer />
+  <ModalContainer />
 </template>
 
 <style scoped>

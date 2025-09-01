@@ -6,6 +6,7 @@ const route = useRoute()
 const workoutStore = useWorkoutStore()
 const activityStore = useActivityStore()
 const weatherStore = useWeatherStore()
+const { deleteModal } = useModalStore()
 // Идентификатор тренировки.
 const idWorkout = route.params.id as string
 // Данные о тренировке.
@@ -64,6 +65,12 @@ const graphs = computed(() => {
 
 definePageMeta({
   middleware: ["route-workout"]
+})
+
+onMounted(() => {
+  const idModal = route.query.idModal
+  // Если передан идентификатор модального окна - удаляем это окно (ModalLoader после добавления нового значения).
+  if (idModal) deleteModal(idModal as string)
 })
 </script>
 
