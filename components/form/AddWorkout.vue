@@ -6,7 +6,7 @@ import type { WeatherByAPI } from '@/types/weatherByAPI'
 type WorkoutField = keyof Workout
 
 // TODO: Объединить с компонентом <FormEditLap>.
-// TODO: Обновление целей.
+// TODO: Обновление достижений.
 
 const weatherStore = useWeatherStore()
 const notificationStore = useNotificationStore()

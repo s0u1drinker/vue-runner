@@ -281,7 +281,7 @@ export function getListOfWeeksForMonthToSelect(year: number | string, month: num
 }
 /**
  * Проверяет строку на соответствие шаблону ДД.ММ.ГГГГ.
- * @param dateString Строка, предположитльно, в формате ДД.ММ.ГГГГ.
+ * @param dateString Строка, предположительно, в формате ДД.ММ.ГГГГ.
  * @returns Результат проверки на соответствие шаблону.
  */
 export function isValidDateString(dateString: string) {
@@ -338,3 +338,30 @@ export function isTwoDateAreTheSame(date1: string, date2: string): boolean {
 
   return resultCompare
 }
+/**
+ * Возвращает даты начала и окончания недели по номеру недели.
+ * @param year Год.
+ * @param weekNumber Номер недели.
+ * @returns Даты или undefined.
+ */
+export function getWeekDatesByWeekNumber(year: number, weekNumber: number): { dateStart: string, dateEnd: string } {
+  const returnDates = {
+    dateStart: '',
+    dateEnd: '',
+  }
+
+  if (typeof year === 'number') {
+    if (typeof weekNumber === 'number') {
+      // Смещение дней для точного расчета дат: день недели первого дня года - 1.
+      const daysOffset = new Date(year, 0, 1).getDay() - 1
+      const endWeekDay = weekNumber * 7 - daysOffset
+      const dateEnd = new Date(year, 0, endWeekDay, 23, 59, 59)
+      const dateStart = new Date(year, 0, endWeekDay - 6, 0, 0, 0)
+
+      returnDates.dateStart = dateStart.toLocaleISOString()
+      returnDates.dateEnd = dateEnd.toLocaleISOString()
+    } else console.error(`Неверный тип переменной <weekNumber>: ${typeof year}. Ожидалось число.`)
+  } else console.error(`Неверный тип переменной <year>: ${typeof year}. Ожидалось число.`)
+
+  return returnDates
+} 

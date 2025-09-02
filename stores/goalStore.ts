@@ -6,6 +6,7 @@ import type { GoalMonth } from '@/types/goalMonth'
 import type { GoalYear } from '@/types/goalYear'
 import type { GoalCollections } from '@/types/goalCollections'
 
+type GoalTypes = GoalYear | GoalMonth | GoalWeek
 type CollectionType = keyof typeof collectionTitles
 
 const collectionTitles: GoalCollections = {
@@ -65,7 +66,13 @@ export const useGoalStore = defineStore('goals', {
       this.goals.months = await getDataFromDB<GoalMonth>(collectionTitles.months, { field: 'month', direction: 'asc' })
       this.goals.weeks = await getDataFromDB<GoalWeek>(collectionTitles.weeks, { field: 'weekNumber', direction: 'asc' })
     },
-    async addGoalInDB(collectionType: CollectionType, goalData: GoalYear | GoalMonth | GoalWeek): Promise<boolean> {
+    /**
+     * Добавляет новую цель в БД.
+     * @param collectionType Тип коллекции: год (years), месяц (months), неделя (weeks).
+     * @param goalData Данные о цели.
+     * @returns Результат добавления.
+     */
+    async addGoal(collectionType: CollectionType, goalData: GoalTypes): Promise<boolean> {
       let result = false
       // Проверяем правильно ли передано имя коллекции (её наличие).
       if (this.goals[collectionType]) {
@@ -79,7 +86,7 @@ export const useGoalStore = defineStore('goals', {
           await addDoc(collectionRef, dataToDb)
           .then((docRef) => {
             goalData.id = docRef.id
-            // Добавляем в хранилище с учётом типов (TS жутко ругается на запись this.goals[collectionType].push(goalData)).
+            // Добавляем в хранилище с учётом типов.
             if (collectionType === 'years') this.goals.years.push(goalData as GoalYear)
             if (collectionType === 'months') this.goals.months.push(goalData as GoalMonth)
             if (collectionType === 'weeks') this.goals.weeks.push(goalData as GoalWeek)
@@ -98,42 +105,96 @@ export const useGoalStore = defineStore('goals', {
     /**
      * Обновление данных о цели (дистанции) за определённый период.
      * @param collection Наименование коллекции: год (years), месяц (months), неделя (weeks).
-     * @param idGoal Идентификатор записи.
-     * @param newValue Новое значение.
+     * @param goalData Изменённые данные.
      * @returns Результат выполнения (true/false) с выводом ошибки в консоль.
      */
-    async updateGoalDistanceInDB(collection: CollectionType, idGoal: string, newValue: number): Promise<boolean> {
+    async updateGoal(collection: CollectionType, goalData: GoalTypes): Promise<boolean> {
       // Проверяем правильно ли передано имя коллекции (её наличие).
       if (this.goals[collection]) {
+        const {id, ...dataToDB} = goalData
         // Проверяем идентификатор.
-        if (idGoal && typeof idGoal === 'string') {
+        if (id && typeof id === 'string') {
           // Вычисляем индекс записи, которую нужно обновить.
-          const goalIndex = this.goals[collection].findIndex((item) => item.id === idGoal)
-          // Если элемент найден,
+          const goalIndex = this.goals[collection].findIndex((item) => item.id === id)
+          // Если элемент найден.
           if (goalIndex !== -1) {
-            // преобразуем значение в число.
-            const newValueNumber = Number(newValue)
-            // Проверяем на NaN.
-            if (!Number.isNaN(newValueNumber)) {
-              // Ссылка на документ для обновления.
-              const docRef = doc(useFirestore(), collectionTitles[collection], idGoal)
+            // Ссылка на документ для обновления.
+            const docRef = doc(useFirestore(), collectionTitles[collection], id)
+            // Обновляем данные в БД.
+            try {
+              await updateDoc(docRef, dataToDB)
               // Обновляем данные в хранилище.
-              this.goals[collection][goalIndex].goalDistance = newValueNumber
-              // И в БД.
-              try {
-                await updateDoc(docRef, { goalDistance: newValueNumber })
-                // Завершаем выполнение.
-                return true
-              } catch(error) {
-                // Хм-м, ошибка...
-                console.error(`Ошибка при обновлении данных в БД: ${error}`)
-              }
-            } else console.error(`Значение не является числом: ${newValueNumber}`)
-          } else console.error(`Не найден элемент с идентификатором: ${idGoal}`)
-        } else console.error(`Неверный тип идентификатора/пустой идентификатор: ${idGoal}`)
+              this.goals[collection][goalIndex] = { ...goalData }
+              // Завершаем выполнение.
+              return true
+            } catch(error) {
+              // Хм-м, ошибка...
+              console.error(`Ошибка при обновлении данных в БД: ${error}`)
+            }
+          } else console.error(`Не найден элемент с идентификатором: ${id}`)
+        } else console.error(`Неверный тип идентификатора/пустой идентификатор: ${id}`)
       } else console.error(`Коллекции с наименованием <${collection}> не существует.`)
       // Какая-то из проверок не пройдена =(
       return false
-    }
+    },
+    /**
+     * Изменяет пройденную дистанцию у целей.
+     * @param workoutData Дата тренировки в формате ДД.ММ.ГГГГ.
+     * @param distance Дистанция.
+     */
+    async changeDistanceForGoals(workoutData: string, distance: number): Promise<void> {
+      if (isValidDateString(workoutData)) {
+        const [ day, month, year ] = workoutData.split('.').map(Number)
+        const weekNumber = new Date(year, month - 1, day).getWeekNumber()
+        const yearGoal = this.getGoalForYear(year)
+        const monthGoal = this.getGoalForMonth(year, month)
+        const weekGoal = this.getGoalForWeek(year, weekNumber)
+        const plusDistance = (value: number) => value + distance
+        const addYearData: GoalYear = {
+          id: '',
+          year,
+          workoutCounter: 1,
+          goalDistance: distance,
+          completedDistance: distance,
+        }
+        // Обновление/добавление цели на год.
+        if (yearGoal && typeof yearGoal.completedDistance !== 'undefined') {
+          await this.updateGoal('years', {
+            ...yearGoal,
+            completedDistance: plusDistance(yearGoal.completedDistance),
+          })
+        } else {
+          await this.addGoal('years', addYearData)
+        }
+        // Обновление/добавление цели на месяц.
+        if (monthGoal && typeof monthGoal.completedDistance !== 'undefined') {
+          await this.updateGoal('months', {
+            ...monthGoal,
+            completedDistance: plusDistance(monthGoal.completedDistance),
+          })
+        } else {
+          await this.addGoal('months', {
+            ...addYearData,
+            month,
+          })
+        }
+        // Обновление/добавление цели на неделю.
+        if (weekGoal && typeof weekGoal.completedDistance !== 'undefined') {
+          await this.updateGoal('weeks', {
+            ...weekGoal,
+            completedDistance: plusDistance(weekGoal.completedDistance),
+          })
+        } else {
+          const { dateStart, dateEnd } = getWeekDatesByWeekNumber(year, weekNumber)
+
+          await this.addGoal('weeks', {
+            ...addYearData,
+            weekNumber,
+            dateEnd,
+            dateStart,
+          })
+        }
+      } else console.error(`Дата не соответствует формату ДД.ММ.ГГГГ: ${workoutData}`)
+    },
   },
 })

@@ -4,11 +4,14 @@ import type { GoalWeek } from '@/types/goalWeek'
 import type { GoalMonth } from '@/types/goalMonth'
 import type { GoalYear } from '@/types/goalYear'
 import type { GoalCollections } from '@/types/goalCollections'
+import type { Workout } from '@/types/workout'
 
-// TODO: Необходимо доработать алгоритм добавления цели: проверка наличия тренировок за указанный период.
+// TODO: Ещё раз внимательно посмотреть на логику.
 
 const goalsStore = useGoalStore()
+const workoutStore = useWorkoutStore()
 const { goals } = storeToRefs(goalsStore)
+const { getWorkoutsForThePeriod } = workoutStore
 
 const year = ref<string>(String(TODAY_DATE.getFullYear()))
 const month = ref<string>(String(TODAY_DATE.getMonth()))
@@ -23,7 +26,7 @@ const updInProgress = ref<boolean>(false)
 const textPeriod = ref<string>('-')
 // Значение цели.
 const goal = ref<number>(-1)
-// Результат выполнения.
+// Результат её выполнения.
 const completed = ref<number>(-1)
 // Текст для отображения результата выполнения цели.
 const textCompleted = computed<string>(() => {
@@ -98,7 +101,7 @@ async function goalChanged(oldValue: number) {
   changeOperation = (oldValue === -1) ? await addGoal() : await updateGoal()
   updInProgress.value = false
 
-  // Если функция вернула ошибка - уведомляем пользователя и возвращаем старое значение.
+  // Если функция вернула ошибку - уведомляем пользователя и возвращаем старое значение.
   if (!changeOperation) {
     goal.value = oldValue
     alert('Ошибка при обновлении данных! Попробуйте ещё раз.')
@@ -120,18 +123,13 @@ async function addGoal(): Promise<boolean> {
     }
     // Если цель устанавливается на неделю.
     if (showWeek.value) {
-      // FIXME: Нужна функция, которая будет возвращать информацию о неделе (дата начала, дата окончания, номер недели).
-      const weekText = weekItems.value.find((item) => item.value === week.value)?.label.split(':')[1].trim().split('-')
-      const dayStartWeek = (weekText && weekText[0]) ? weekText[0].split('.')[0] : ''
-      const dayEndWeek = (weekText && weekText[1]) ? weekText[1].split('.')[0] : ''
-      const dateStart = dayStartWeek ? new Date(Number(year.value), Number(month.value) - 1, Number(dayStartWeek), 0, 0, 0).toLocaleISOString() : ''
-      const dateEnd = dayEndWeek ? new Date(Number(year.value), Number(month.value) - 1, Number(dayEndWeek), 23, 59, 59).toLocaleISOString() : ''
+      const { dateStart, dateEnd } = getWeekDatesByWeekNumber(Number(year.value), Number(week.value))
       // Добавляем данными на неделю.
       goalData = {
         ...goalData,
         weekNumber: Number(week.value),
-        dateStart: dateStart,
-        dateEnd: dateEnd,
+        dateStart,
+        dateEnd,
       }
     } else if (showMonth.value) {
       // Или на месяц, если, конечно, установлен соответствующий флаг.
@@ -141,7 +139,7 @@ async function addGoal(): Promise<boolean> {
       }
     }
     // Добавляем данные в хранилище и БД.
-    addResult = await goalsStore.addGoalInDB(collectionName.value, goalData)
+    addResult = await goalsStore.addGoal(collectionName.value, goalData)
   } else console.error(`Странная ситуация: функция добавления цели была вызвана при отключенных флагах (${showYear.value}, ${showMonth.value}, ${showWeek.value}).`)
   // Результат.
   return addResult
@@ -149,24 +147,46 @@ async function addGoal(): Promise<boolean> {
 // Обновление цели.
 async function updateGoal(): Promise<boolean> {
   let updateResult: boolean = false
-  let idGoal: string = ''
-  // Вычисление идентификатора записи.
-  if (showWeek.value) {
-    idGoal = goals.value.weeks.find((item) => item.weekNumber === Number(week.value))?.id ?? ''
-  } else if (showMonth.value) {
-    idGoal = goals.value.months.find((item) => (item.year === Number(year.value)) && (item.month === Number(month.value)))?.id ?? ''
-  } else if (showYear.value) {
-    idGoal = goals.value.years.find((item) => (item.year === Number(year.value)))?.id ?? ''
-  }
-  // Если имя коллекции и идентификатор записи найдены.
+  // Если имя коллекции определено.
   if (collectionName.value) {
-    if (idGoal) {
+    let goalData: GoalYear | GoalMonth | GoalWeek | undefined
+    // Вычисление идентификатора записи.
+    if (showWeek.value) {
+      goalData = goals.value.weeks.find((item) => item.weekNumber === Number(week.value))
+    } else if (showMonth.value) {
+      goalData = goals.value.months.find((item) => (item.year === Number(year.value)) && (item.month === Number(month.value)))
+    } else if (showYear.value) {
+      goalData = goals.value.years.find((item) => (item.year === Number(year.value)))
+    }
+
+    if (goalData) {
       // Обновляем данные в хранилище и БД.
-      updateResult = await goalsStore.updateGoalDistanceInDB(collectionName.value, idGoal, goal.value)
-    } else console.error('Идентификатор цели оказался пустым.')
+      updateResult = await goalsStore.updateGoal(collectionName.value, goalData)
+    } else console.error('По заданным параметрам цель не найдена.')
   } else console.error(`Странная ситуация: функция обновления цели была вызвана при отключенных флагах (${showYear.value}, ${showMonth.value}, ${showWeek.value}).`)
   // Результат работы.
   return updateResult
+}
+// Функция принудительного пересчёта результата выполнения цели.
+// TODO: Ответить на вопрос: а она нужна? Ведь значение цели пересчитывается при внесении данных о новой тренировке.
+function recalculateCompletedDistance(): void {
+  const period: { year: number, month?: number, week?: number } = { year: +year.value }
+
+  if (showMonth.value) {
+    period.month = +month.value
+
+    if (showWeek.value) period.week = +week.value
+  }
+  
+  const workouts: Workout[] = getWorkoutsForThePeriod(period)
+
+  if (workouts.length) {
+    const newCompletedDistance: number = workouts.reduce((sum, workout) => sum + workout.distance, 0)
+
+    if (newCompletedDistance !== completed.value) {
+      // Обновить данные о цели в БД и хранилище.
+    }
+  }
 }
 </script>
 
@@ -239,9 +259,17 @@ async function updateGoal(): Promise<boolean> {
       <div class="goals__item">
         <span class="goals__item-name bold">Выполнено:</span>
         <Icon name="svg-spinners:clock" v-if="updInProgress" />
-        <template v-else>
+        <div class="flex flex_ai-center flex_gap" v-else>
           {{ textCompleted }}
-        </template>
+          <button
+            class="button button_blue goals__button"
+            aria-label="Пересчитать"
+            @click="recalculateCompletedDistance"
+            v-if="false"
+          >
+            <Icon name="material-symbols-light:refresh-rounded" size="1.5rem" />
+          </button>
+        </div>
       </div>
     </div>
   </FieldsetWrapper>
@@ -318,6 +346,10 @@ async function updateGoal(): Promise<boolean> {
     & .goals__item-name {
       width: 6rem;
     }
+  }
+
+  &__button {
+    padding: .325rem;
   }
 }
 </style>
