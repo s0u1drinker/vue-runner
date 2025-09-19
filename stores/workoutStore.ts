@@ -118,6 +118,7 @@ export const useWorkoutStore = defineStore('workout', {
      */
     async addWorkoutInDB(workout: Workout): Promise<AddWorkoutResult> {
       const goalStore = useGoalStore()
+      const achievementStore = useAchievementStore()
       const collectionRef = collection(useFirestore(), 'workout')
       const { id, ...workoutData } = workout
       let addResult: AddWorkoutResult = {
@@ -132,6 +133,8 @@ export const useWorkoutStore = defineStore('workout', {
         this.workouts.push(workout)
         // Обновляем дистанцию у целей.
         goalStore.changeDistanceForGoals(prettyDate(workout.dateStart).date, workout.distance)
+        // Обновляем рейтинги.
+        if (workout.laps.length) achievementStore.updateRatings(workout)
         // Завершаем выполнение.
         addResult.result = true
         addResult.idWorkout = docRef.id

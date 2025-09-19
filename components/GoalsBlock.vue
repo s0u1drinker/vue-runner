@@ -7,6 +7,7 @@ import type { GoalCollections } from '@/types/goalCollections'
 import type { Workout } from '@/types/workout'
 
 // TODO: Ещё раз внимательно посмотреть на логику.
+// TODO: Доделать recalculateCompletedDistance. Но только после выполнения TODO выше.
 
 const goalsStore = useGoalStore()
 const workoutStore = useWorkoutStore()
@@ -22,6 +23,8 @@ const showMonth = ref<boolean>(false)
 const showWeek = ref<boolean>(false)
 // Флаг прогресса обновления данных в БД.
 const updInProgress = ref<boolean>(false)
+// Флаг вычисления результата цели.
+const isComputedCompletedDistance = ref<boolean>(false)
 // Текст для отображения периода.
 const textPeriod = ref<string>('-')
 // Значение цели.
@@ -42,7 +45,7 @@ const weekItems = computed<SelectNativeOptions[]>(() => {
 const collectionName = computed<keyof GoalCollections | null>(() => {
   return (showWeek.value) ? 'weeks' : (showMonth.value) ? 'months' : (showYear.value) ? 'years' : null
 })
-// Наболюдаем за флагом флагом показа года.
+// Наболюдаем за флагом показа года.
 watch(showYear, (newValue) => {
   // Если стал отключен.
   if (!newValue) {
@@ -150,7 +153,7 @@ async function updateGoal(): Promise<boolean> {
   // Если имя коллекции определено.
   if (collectionName.value) {
     let goalData: GoalYear | GoalMonth | GoalWeek | undefined
-    // Вычисление идентификатора записи.
+    // Цель.
     if (showWeek.value) {
       goalData = goals.value.weeks.find((item) => item.weekNumber === Number(week.value))
     } else if (showMonth.value) {
@@ -161,16 +164,17 @@ async function updateGoal(): Promise<boolean> {
 
     if (goalData) {
       // Обновляем данные в хранилище и БД.
-      updateResult = await goalsStore.updateGoal(collectionName.value, goalData)
+      updateResult = await goalsStore.updateGoal(collectionName.value, { ...goalData, goalDistance: goal.value })
     } else console.error('По заданным параметрам цель не найдена.')
   } else console.error(`Странная ситуация: функция обновления цели была вызвана при отключенных флагах (${showYear.value}, ${showMonth.value}, ${showWeek.value}).`)
   // Результат работы.
   return updateResult
 }
 // Функция принудительного пересчёта результата выполнения цели.
-// TODO: Ответить на вопрос: а она нужна? Ведь значение цели пересчитывается при внесении данных о новой тренировке.
 function recalculateCompletedDistance(): void {
   const period: { year: number, month?: number, week?: number } = { year: +year.value }
+
+  isComputedCompletedDistance.value = true
 
   if (showMonth.value) {
     period.month = +month.value
@@ -187,6 +191,10 @@ function recalculateCompletedDistance(): void {
       // Обновить данные о цели в БД и хранилище.
     }
   }
+
+  setTimeout(() => {
+    isComputedCompletedDistance.value = false
+  }, 1000)
 }
 </script>
 
@@ -265,9 +273,10 @@ function recalculateCompletedDistance(): void {
             class="button button_blue goals__button"
             aria-label="Пересчитать"
             @click="recalculateCompletedDistance"
-            v-if="false"
+            v-show="showYear && textCompleted !== '-'"
+            :disabled="isComputedCompletedDistance"
           >
-            <Icon name="material-symbols-light:refresh-rounded" size="1.5rem" />
+            <Icon :name="isComputedCompletedDistance ? 'svg-spinners:clock' : 'material-symbols-light:refresh-rounded'" size="1.5rem" />
           </button>
         </div>
       </div>

@@ -78,7 +78,13 @@ onMounted(() => {
   <template v-if="workout">
     <h1>{{ `Тренировка ${prettyDate(workout.dateStart).date} в ${prettyDate(workout.dateStart).time}` }}</h1>
     <div class="workout">
-      <div class="workout__comment">{{ workout.comment }}</div>
+      <div class="workout__comment" v-if="workout.comment.length">
+        <BadgeSimple
+          v-for="(textBadge, index) in workout.comment"
+          :text="textBadge"
+          :key="index"
+        />
+      </div>
       <div class="workout__indicators">
         <WorkoutIndicators :indicators="workoutIndicators" />
       </div>
@@ -100,7 +106,8 @@ onMounted(() => {
   margin-top: var(--indent);
 
   &__comment {
-    font-style: italic;
+    display: flex;
+    gap: var(--indent);
   }
 
   &__indicators {

@@ -8,6 +8,7 @@ export default defineNuxtPlugin(async () => {
   const goalStore = useGoalStore()
   const achievementStore = useAchievementStore()
   const statistic = useStatisticStore()
+  const badges = useBadgeStore()
 
   // Поднимаем флаг загрузки данных.
   appStore.setLoadingDataFlag(true)
@@ -19,6 +20,7 @@ export default defineNuxtPlugin(async () => {
     goalStore.updateGoalsFromDB(),
     achievementStore.updateAchievementsFromDB(),
     statistic.updateTotalStatisticFromDB(),
+    badges.updateBadgeCommentsFromDB(),
   ])
   .catch((error) => {
     console.error(`Ошибка при загрузке данных: ${error}`)

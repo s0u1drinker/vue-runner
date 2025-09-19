@@ -1,5 +1,6 @@
 <script setup lang="ts">
-const achievements = storeToRefs(useAchievementStore()).achievements
+const achievementsStore = useAchievementStore()
+const { achievements } = storeToRefs(achievementsStore)
 </script>
 
 <template>

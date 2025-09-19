@@ -36,7 +36,7 @@ const formData = reactive<Workout>({
   climb: 0,
   weightBefore: 0,
   weightAfter: 0,
-  comment: '',
+  comment: [],
   laps: <Lap[]>[],
 })
 const rulesToCheck = reactive<{ [key: string]: { cl: null | string[], isBadValue: () => boolean, errorText: string }}>({
@@ -431,12 +431,7 @@ function clearForm(): void {
     </div>
     <div class="form-add__item">
       <div class="form-add__item-title">Комментарий:</div>
-      <TextareaNative
-        :rows="4"
-        :placeholder="'Самочувствие / негативные или положительные моменты / обстановка вокруг и т.д. и т.п.'"
-        :maxLength="120"
-        v-model="formData.comment"
-      />
+      <AddWorkoutCommentBadges v-model="formData.comment" />
     </div>
     <div class="form-add__item">
       <p class="form-add__message color_red">{{ messageResultSubmitForm }}</p>
@@ -501,6 +496,7 @@ function clearForm(): void {
     @media (--viewport-sm) {
       transform: translateY(50%);
       width: 10rem;
+      flex: none;
     }
   }
 
